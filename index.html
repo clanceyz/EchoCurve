@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoCurve - SRS Practice</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --text: #e0e0e0;
+            --accent: #00ADB5;
+            --card-bg: #2d2d2d;
+            --input-bg: #333;
+            --danger: #ff6b6b;
+            --success: #4cd137;
+            --warning: #fbc531;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { text-align: center; color: var(--accent); margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+        
+        /* Layout */
+        .app-container { display: flex; gap: 30px; align-items: flex-start; }
+        .sidebar { 
+            width: 220px; background: #222; padding: 20px; border-radius: 10px; 
+            border: 1px solid #444; display: flex; flex-direction: column; gap: 20px; 
+            flex-shrink: 0;
+        }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; }
+
+        /* Sidebar Elements */
+        .menu-btn {
+            background: #333; border: 1px solid #444; padding: 15px; 
+            font-size: 1.1em; color: var(--text); cursor: pointer; text-align: left;
+            border-radius: 8px; transition: background 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .menu-btn:hover { background: #444; border-color: var(--accent); }
+        .menu-btn.primary { background: var(--accent); border: none; color: white; justify-content: center; text-align: center; font-weight: bold; }
+        
+        .badge { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        .status-text { font-size: 0.9em; color: #888; text-align: center; margin-bottom: 5px; }
+
+        /* Inputs */
+        .controls { 
+            display: flex; gap: 10px; background: var(--card-bg); padding: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 0;
+        }
+        input[type="text"] {
+            flex-grow: 1; padding: 12px; border: none; border-radius: 5px;
+            background: var(--input-bg); color: white; font-size: 16px; outline: none;
+        }
+        input[type="text"]:focus { background: #444; box-shadow: 0 0 0 2px var(--accent); }
+        
+        button {
+            padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
+            font-weight: bold; transition: opacity 0.2s; color: white;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-add { background-color: var(--accent); }
+        .btn-play { background-color: transparent; color: var(--success); font-size: 1.2em; padding: 5px; }
+        .btn-del { background-color: transparent; color: var(--danger); font-size: 1.2em; padding: 5px; }
+
+        /* Dictionary */
+        .dict-results {
+            background: #222; padding: 20px; border-left: 4px solid var(--accent); animation: fadeIn 0.3s;
+            margin-top: 10px; border-radius: 5px;
+        }
+        .dict-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .dict-word { font-size: 1.8em; color: var(--accent); font-weight: bold; }
+        .dict-phonetic { font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif; color: #888; }
+        .btn-audio { background: none; border: 1px solid #444; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: var(--success); display: flex; align-items: center; justify-content: center; }
+        .btn-audio:hover { background: #333; }
+        .meaning-block { margin-bottom: 15px; }
+        .pos-tag { background: #444; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 8px; text-transform: uppercase; }
+        .def-list { margin: 5px 0 0 20px; padding: 0; color: #ccc; font-size: 0.95em; }
+        .def-list li { margin-bottom: 4px; }
+        .section-header { font-weight: bold; color: var(--accent); margin-top: 20px; margin-bottom: 10px; }
+        .example-item {
+            display: flex; justify-content: space-between; align-items: center; padding: 10px;
+            background: #1a1a1a; margin-bottom: 8px; border-radius: 5px; border: 1px solid #333;
+        }
+        .example-text { margin-right: 10px; cursor: pointer; }
+        .btn-small-add { background: var(--success); font-size: 0.8em; padding: 5px 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Modals & Cards */
+        .card {
+            background: var(--card-bg); margin-bottom: 15px; padding: 20px; border-radius: 10px;
+            display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .text-content { flex-grow: 1; margin: 0 15px; font-size: 18px; cursor: pointer; }
+        .meta-info { font-size: 0.8em; color: #666; margin-top: 5px; }
+        .empty-state { text-align: center; color: #666; padding: 20px; background: #252525; border-radius: 8px; }
+
+        #review-modal, #library-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-card {
+            width: 500px; padding: 40px; text-align: center; border: 2px solid var(--accent);
+            background: #222; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .masked { background-color: #555; color: transparent; border-radius: 4px; }
+        .btn-forgot { background-color: var(--danger); padding: 15px; font-size: 1.2em; width: 100%; }
+        .btn-remember { background-color: var(--success); padding: 15px; font-size: 1.2em; width: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="font-size: 1.5em; margin: 0; color: var(--accent);">EchoCurve</h1>
+                <div style="font-size: 0.8em; color: #888;">Spaced Repetition System</div>
+            </div>
+
+            <button class="menu-btn" onclick="openLibraryModal()">
+                <span>📚 Library</span>
+                <span id="total-count" class="badge">0</span>
+            </button>
+
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 0;">
+
+            <button id="btn-start-review" class="menu-btn primary" style="display: none;" onclick="startReviewSession()">
+                🚀 Start Review
+            </button>
+        </div>
+
+        <!-- Main Content (Inputs) -->
+        <div class="main-content">
+            <!-- 1. Sentence Input -->
+            <div class="controls" style="border-radius: 10px 10px 0 0; margin-bottom: 10px;">
+                 <span style="font-size: 1.2em; margin-right: 10px;">✍️</span>
+                <input type="text" id="newSentence" tabindex="2" placeholder="Type a new sentence (or paste one) to learn..." onkeypress="handleEnter(event)">
+                <button class="btn-add" tabindex="-1" onclick="addSentence()">Add</button>
+            </div>
+
+            <!-- 2. Word Lookup -->
+            <div class="controls" style="border-radius: 0 0 10px 10px;">
+                <span style="font-size: 1.2em; margin-right: 10px;">🔍</span>
+                <input type="text" id="wordInput" tabindex="1" placeholder="Type a word to find examples (Enter to search)..." onkeypress="handleWordEnter(event)">
+                <button class="btn-add" tabindex="-1" onclick="lookupWord()">Search</button>
+            </div>
+
+            <!-- 3. Dictionary Results -->
+            <div id="dict-results" class="dict-results" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <!-- Library Modal Overlay -->
+    <div id="library-modal" onclick="if(event.target === this) this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 900; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 800px; height: 80vh; display: flex; flex-direction: column; padding: 20px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+                <h2 style="margin: 0; color: var(--accent);">📚 Library</h2>
+                <button onclick="document.getElementById('library-modal').style.display='none'" style="background:none; border:none; font-size: 1.5em; color: #666;">✕</button>
+            </div>
+            
+            <div id="library-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- Review Modal Overlay -->
+    <div id="review-modal" onclick="if(event.target === this) closeReviewModal()">
+        <div class="modal-card" style="position: relative;">
+            <button onclick="closeReviewModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5em; color: #666; padding: 5px;">✕</button>
+            <div style="color: #888; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Review Time</div>
+            
+            <div id="modal-text" style="font-size: 2em; margin-bottom: 20px; cursor: pointer;" onclick="toggleModalReveal()">
+                <span id="modal-text-content" class="masked">Loading...</span>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <button class="btn-play" style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333;" onclick="replayCurrentReview()">
+                    🔊 Replay Audio
+                </button>
+            </div>
+            
+            <div style="font-size: 0.9em; color: #666; margin-bottom: 30px;">(Click text to reveal)</div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <button class="btn-forgot" onclick="finishReview(false)">Again ❌</button>
+                <button class="btn-remember" onclick="finishReview(true)">Good ✅</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar" style="position: fixed; bottom: 10px; right: 10px; background: #333; padding: 5px 10px; font-size: 0.8em; color: #888; border-radius: 5px; opacity: 0.7;">
+        Initializing...
+    </div>
+
+    <script>
+        let sentences = [];
+        const API_URL = '/api/data';
+        const synth = window.speechSynthesis;
+        let currentReviewItem = null;
+
+        function logStatus(msg) {
+            const el = document.getElementById('status-bar');
+            if (el) { el.textContent = msg; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0.5, 3000); }
+        }
+
+        async function loadData() {
+            logStatus('Connecting to Google Drive...');
+            try {
+                const res = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                
+                const serverData = await res.json();
+                logStatus(`Server has ${serverData.length} items.`);
+                
+                let oldLocalData = localStorage.getItem('english_srs_sentences');
+                if (!oldLocalData) oldLocalData = localStorage.getItem('english_practice_sentences');
+                if (!oldLocalData) oldLocalData = localStorage.getItem('english_srs_sentences_backup');
+
+                if (oldLocalData) {
+                    let localSentences = JSON.parse(oldLocalData);
+                    if (Array.isArray(localSentences) && localSentences.length > 0) {
+                        const serverIds = new Set(serverData.map(s => s.id));
+                        const normalizedLocal = localSentences.map(s => ({
+                            id: s.id || Date.now(),
+                            text: s.text,
+                            nextReview: s.nextReview || Date.now(), 
+                            interval: s.interval || 0,
+                            stage: s.stage || 0
+                        }));
+                        const newItems = normalizedLocal.filter(s => !serverIds.has(s.id));
+                        if (newItems.length > 0) {
+                            sentences = [...newItems, ...serverData];
+                            await save(); 
+                            alert(`🎉 Recovered ${newItems.length} items!`);
+                        } else {
+                            sentences = serverData;
+                        }
+                        localStorage.setItem('english_srs_sentences_backup', oldLocalData);
+                        localStorage.removeItem('english_srs_sentences');
+                        localStorage.removeItem('english_practice_sentences');
+                    } else {
+                        sentences = serverData;
+                    }
+                } else {
+                    sentences = serverData;
+                }
+                render();
+            } catch (err) {
+                console.error('Failed to load:', err);
+                logStatus('Error loading data.');
+                sentences = [];
+                render();
+            }
+        }
+
+        async function save() {
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sentences)
+                });
+                if (!res.ok) throw new Error('Server unavailable');
+                render();
+                return true;
+            } catch (err) {
+                console.error('Failed to save:', err);
+                logStatus('❌ ERROR: Could not save! Is server running?');
+                alert('⚠️ Saving failed! Check if the local server is running.\n\nYour data is NOT saved to disk.');
+                return false;
+            }
+        }
+
+        function updateDashboard() {
+            const now = Date.now();
+            const dueCount = sentences.filter(s => s.nextReview <= now).length;
+            const btn = document.getElementById('btn-start-review');
+
+            btn.style.display = 'flex'; // Ensure visible
+
+            if (dueCount > 0) {
+                btn.textContent = `🚀 Start Review (${dueCount})`;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.background = 'var(--accent)';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.textContent = `✅ No Reviews`;
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.background = '#444';
+                btn.style.cursor = 'default';
+            }
+            document.getElementById('total-count').textContent = sentences.length;
+        }
+
+        function startReviewSession() {
+            const now = Date.now();
+            const dueItem = sentences.find(s => s.nextReview <= now);
+            if (dueItem) {
+                startReview(dueItem);
+            } else {
+                updateDashboard();
+            }
+        }
+
+        function startReview(item) {
+            currentReviewItem = item;
+            const modal = document.getElementById('review-modal');
+            modal.style.display = 'flex';
+            const textEl = document.getElementById('modal-text-content');
+            textEl.textContent = item.text;
+            textEl.className = 'masked'; 
+            speak(item.text);
+        }
+
+        function finishReview(success) {
+            if (!currentReviewItem) return;
+            const item = currentReviewItem;
+            
+            if (success) {
+                // REAL Schedule (Days)
+                // 0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90
+                const intervals = [0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90];
+                item.stage = Math.min(item.stage + 1, intervals.length);
+                item.interval = intervals[item.stage - 1] || (item.interval * 2);
+            } else {
+                item.stage = 1;
+                item.interval = 0.5; // Reset to 12h
+            }
+            // Days to MS
+            item.nextReview = Date.now() + (item.interval * 24 * 60 * 60 * 1000);
+            
+            save();
+            
+            const now = Date.now();
+            const nextItem = sentences.find(s => s.nextReview <= now && s.id !== item.id);
+            if (nextItem) {
+                 setTimeout(() => startReview(nextItem), 300);
+            } else {
+                document.getElementById('review-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
+            }
+        }
+
+        function openLibraryModal() { document.getElementById('library-modal').style.display = 'flex'; }
+        function toggleModalReveal() { document.getElementById('modal-text-content').classList.toggle('masked'); }
+        function replayCurrentReview() { if (currentReviewItem) speak(currentReviewItem.text); }
+        function closeReviewModal() { document.getElementById('review-modal').style.display = 'none'; currentReviewItem = null; updateDashboard(); }
+
+        function render() {
+            updateDashboard();
+            const libList = document.getElementById('library-list');
+            libList.innerHTML = '';
+            const sortedLibrary = [...sentences].sort((a, b) => b.id - a.id);
+            if (sortedLibrary.length === 0) {
+                libList.innerHTML = '<div class="empty-state">Library is empty. Add a sentence above!</div>';
+            } else {
+                sortedLibrary.forEach(s => {
+                    const nextDate = new Date(s.nextReview).toLocaleDateString();
+                    const isDue = s.nextReview <= Date.now();
+                    const statusColor = isDue ? 'var(--accent)' : '#666';
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <div class="card-top">
+                            <button class="btn-play" tabindex="-1" onclick="speak('${s.text.replace(/'/g, "\\'")}')">▶️</button>
+                            <span class="text-content" onclick="editSentence(${s.id})">${s.text}</span>
+                            <div>
+                                <button class="btn-del" style="color:var(--warning); margin-right:5px;" tabindex="-1" onclick="editSentence(${s.id})">✏️</button>
+                                <button class="btn-del" tabindex="-1" onclick="deleteSentence(${s.id})">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="meta-info" style="color:${statusColor}; margin-left: 45px;">
+                            ${isDue ? '<b>DUE NOW</b>' : 'Next: ' + nextDate} (Interval: ${s.interval}d)
+                        </div>
+                    `;
+                    libList.appendChild(div);
+                });
+            }
+        }
+
+        async function addSentence() {
+            const input = document.getElementById('newSentence');
+            const text = input.value.trim();
+            if (text) {
+                // Optimistic add
+                sentences.unshift({ id: Date.now(), text: text, nextReview: Date.now(), interval: 0, stage: 0 });
+                
+                // Try saving
+                const success = await save();
+                
+                if (success) {
+                    input.value = '';
+                    speak(text);
+                    render();
+                } else {
+                    // Revert if failed
+                    sentences.shift();
+                    render();
+                }
+            }
+        }
+
+        function handleEnter(e) { if (e.key === 'Enter') addSentence(); }
+        
+        function deleteSentence(id) { if(confirm('Delete?')) { sentences = sentences.filter(s => s.id !== id); save(); } }
+        
+        function editSentence(id) {
+            const item = sentences.find(s => s.id === id);
+            if (!item) return;
+            const newText = prompt('Edit sentence:', item.text);
+            if (newText !== null && newText.trim() !== '') { item.text = newText.trim(); save(); }
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Try better voices
+            const voices = synth.getVoices();
+            const preferredVoice = voices.find(v => v.name.includes('Google US English')) || 
+                                   voices.find(v => v.name.includes('Natural')) ||
+                                   voices.find(v => v.lang === 'en-US');
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            synth.speak(utterance);
+        }
+        synth.onvoiceschanged = () => { console.log('Voices loaded'); };
+
+        async function lookupWord() {
+            const input = document.getElementById('wordInput');
+            const word = input.value.trim();
+            if (!word) return;
+            const resDiv = document.getElementById('dict-results');
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = '<div style="text-align:center">🔍 Searching...</div>';
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (!response.ok) throw new Error('Not found');
+                const data = await response.json();
+                const entry = data[0];
+                const phoneticText = entry.phonetic || (entry.phonetics.find(p => p.text) || {}).text || '';
+                const phoneticAudio = (entry.phonetics.find(p => p.audio && p.audio !== '') || {}).audio || '';
+                const audioBtn = phoneticAudio ? `<button class="btn-audio" tabindex="-1" onclick="new Audio('${phoneticAudio}').play()">🔊</button>` : '';
+                let meaningsHtml = '';
+                entry.meanings.forEach(m => {
+                    meaningsHtml += `<div class="meaning-block"><span class="pos-tag">${m.partOfSpeech}</span> <span style="color:#ccc">${m.definitions[0].definition}</span></div>`;
+                });
+                const examples = [];
+                entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.example) examples.push(d.example); }); });
+                let examplesHtml = '';
+                if (examples.length > 0) {
+                    examplesHtml = '<div class="section-header">Examples (Click Add)</div>';
+                    examples.slice(0, 5).forEach(ex => {
+                        const safeText = ex.replace(/'/g, "\\'");
+                        examplesHtml += `<div class="example-item"><div class="example-text" onclick="speak('${safeText}')">▶️ "${ex}"</div><button class="btn-small-add" tabindex="-1" onclick="addDictionarySentence('${safeText}', this)">Add</button></div>`;
+                    });
+                } else { examplesHtml = '<div style="color:#888">No examples found.</div>'; }
+                resDiv.innerHTML = `<div class="dict-header"><span class="dict-word">${entry.word}</span><span class="dict-phonetic">${phoneticText}</span>${audioBtn}</div>${meaningsHtml}${examplesHtml}`;
+            } catch (err) { resDiv.innerHTML = `<div style="color:var(--danger)">❌ Word not found.</div>`; }
+        }
+
+        function handleWordEnter(e) { if (e.key === 'Enter') lookupWord(); }
+        function addDictionarySentence(text, btn) {
+            document.getElementById('newSentence').value = text;
+            addSentence();
+            const originalText = btn.textContent;
+            btn.textContent = "✅ Added";
+            btn.style.backgroundColor = "#444";
+            setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1000);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('dict-results').style.display = 'none';
+                const wordInput = document.getElementById('wordInput');
+                wordInput.value = '';
+                wordInput.focus();
+                return;
+            }
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) return;
+                document.getElementById('wordInput').focus();
+            }
+        });
+
+        setInterval(updateDashboard, 1000);
+        loadData();
+    </script>
+</body>
+</html>
