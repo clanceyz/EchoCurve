@@ -1,0 +1,12 @@
+{
+  "name": "echocurve",
+  "version": "1.0.0",
+  "description": "Audio-first Spaced Repetition System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["srs", "language-learning", "ebbinghaus", "audio"],
+  "author": "",
+  "license": "MIT"
+}

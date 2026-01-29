@@ -19,11 +19,22 @@
 
 1.  Clone the repository.
 2.  Open a terminal in the project folder.
-3.  Run the server:
+3.  (Optional) Set your data path in your environment:
+    *   Windows: `$env:DATA_PATH="C:\path\to\data"`
+    *   Linux/Mac: `export DATA_PATH="/path/to/data"`
+4.  Run the server:
     ```bash
-    node server.js
+    npm start
     ```
-4.  Open your browser to: `http://localhost:3000`
+5.  Open your browser to: `http://localhost:3000`
+
+## Running as a Persistent Service
+
+To keep EchoCurve running in the background automatically, we recommend using **PM2**:
+
+1.  Install PM2: `npm install pm2 -g`
+2.  Start the service: `pm2 start server.js --name "echocurve"`
+3.  Save the process list: `pm2 save`
 
 ## Data Storage
 

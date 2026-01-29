@@ -2,10 +2,10 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
-const DATA_DIR = 'G:\\My Drive\\ClawdBot';
+const PORT = process.env.PORT || 3000;
+const DATA_DIR = process.env.DATA_PATH || path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'english-data.json');
-const HTML_FILE = path.join(__dirname, 'english-practice.html');
+const HTML_FILE = path.join(__dirname, 'index.html');
 
 // Ensure directory exists
 if (!fs.existsSync(DATA_DIR)) {
