@@ -12,8 +12,16 @@ const userStore = require('./users');
 const PORT = process.env.PORT || 3000;
 const HTML_FILE = path.join(__dirname, 'index.html');
 
-const rpID = 'localhost';
-const origin = `http://${rpID}:${PORT}`;
+// Dynamic RP ID and origin based on request host
+function getWebAuthnConfig(req) {
+    const host = req.headers.host || `localhost:${PORT}`;
+    const hostname = host.split(':')[0];
+    const protocol = hostname === 'localhost' ? 'http' : 'https';
+    return {
+        rpID: hostname,
+        origin: `${protocol}://${host}`
+    };
+}
 
 // In-memory challenge store (in a real app, this should be in a session/db)
 const challenges = new Map();
@@ -60,6 +68,7 @@ const server = http.createServer(async (req, res) => {
         const userDevices = (user && user.devices) ? user.devices.filter(d => d.credentialID) : [];
 
         try {
+            const { rpID } = getWebAuthnConfig(req);
             const options = await generateRegistrationOptions({
                 rpName: 'EchoCurve',
                 rpID,
@@ -94,6 +103,7 @@ const server = http.createServer(async (req, res) => {
             const expectedChallenge = challenges.get(username);
 
             try {
+                const { rpID, origin } = getWebAuthnConfig(req);
                 const verification = await verifyRegistrationResponse({
                     response: registrationResponse,
                     expectedChallenge,
@@ -170,6 +180,7 @@ const server = http.createServer(async (req, res) => {
 
             console.log('[Auth] Allowing credentials:', JSON.stringify(allowedCreds));
 
+            const { rpID } = getWebAuthnConfig(req);
             const options = await generateAuthenticationOptions({
                 rpID,
                 allowCredentials: allowedCreds,
@@ -225,6 +236,7 @@ const server = http.createServer(async (req, res) => {
                 // Decode Base64URL to Buffer for the library
                 const credIdBuffer = Buffer.from(dbAuthenticator.credentialID.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 
+                const { rpID, origin } = getWebAuthnConfig(req);
                 const verification = await verifyAuthenticationResponse({
                     response: authenticationResponse,
                     expectedChallenge,
