@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
             --success: #4cd137;
             --warning: #fbc531;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
@@ -24,102 +26,455 @@
             padding: 20px;
             line-height: 1.6;
         }
-        h1 { text-align: center; color: var(--accent); margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
-        
+
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
         /* Layout */
-        .app-container { display: flex; gap: 30px; align-items: flex-start; }
-        .sidebar { 
-            width: 220px; background: #222; padding: 20px; border-radius: 10px; 
-            border: 1px solid #444; display: flex; flex-direction: column; gap: 20px; 
+        .app-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             flex-shrink: 0;
         }
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
         /* Sidebar Elements */
         .menu-btn {
-            background: #333; border: 1px solid #444; padding: 15px; 
-            font-size: 1.1em; color: var(--text); cursor: pointer; text-align: left;
-            border-radius: 8px; transition: background 0.2s;
-            display: flex; justify-content: space-between; align-items: center;
+            background: #333;
+            border: 1px solid #444;
+            padding: 15px;
+            font-size: 1.1em;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .menu-btn:hover { background: #444; border-color: var(--accent); }
-        .menu-btn.primary { background: var(--accent); border: none; color: white; justify-content: center; text-align: center; font-weight: bold; }
-        
-        .badge { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
-        .status-text { font-size: 0.9em; color: #888; text-align: center; margin-bottom: 5px; }
+
+        .menu-btn:hover {
+            background: #444;
+            border-color: var(--accent);
+        }
+
+        .menu-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: white;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .badge {
+            background: var(--accent);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        .status-text {
+            font-size: 0.9em;
+            color: #888;
+            text-align: center;
+            margin-bottom: 5px;
+        }
 
         /* Inputs */
-        .controls { 
-            display: flex; gap: 10px; background: var(--card-bg); padding: 20px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 0;
+        .controls {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
         }
-        input[type="text"] {
-            flex-grow: 1; padding: 12px; border: none; border-radius: 5px;
-            background: var(--input-bg); color: white; font-size: 16px; outline: none;
+
+        input[type="text"],
+        textarea {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            font-family: inherit;
         }
-        input[type="text"]:focus { background: #444; box-shadow: 0 0 0 2px var(--accent); }
-        
+
+        textarea {
+            resize: none;
+            overflow-y: hidden;
+            min-height: 1.4em;
+            line-height: 1.4;
+            height: auto;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            background: #444;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
         button {
-            padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
-            font-weight: bold; transition: opacity 0.2s; color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            color: white;
         }
-        button:hover { opacity: 0.9; }
-        .btn-add { background-color: var(--accent); }
-        .btn-play { background-color: transparent; color: var(--success); font-size: 1.2em; padding: 5px; }
-        .btn-del { background-color: transparent; color: var(--danger); font-size: 1.2em; padding: 5px; }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-add {
+            background-color: var(--accent);
+        }
+
+        .btn-play {
+            background-color: transparent;
+            color: var(--success);
+            font-size: 1.2em;
+            padding: 5px;
+        }
+
+        .btn-del {
+            background-color: transparent;
+            color: var(--danger);
+            font-size: 1.2em;
+            padding: 5px;
+        }
 
         /* Dictionary */
         .dict-results {
-            background: #222; padding: 20px; border-left: 4px solid var(--accent); animation: fadeIn 0.3s;
-            margin-top: 10px; border-radius: 5px;
+            background: #222;
+            padding: 20px;
+            border-left: 4px solid var(--accent);
+            animation: fadeIn 0.3s;
+            margin-top: 10px;
+            border-radius: 5px;
         }
-        .dict-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .dict-word { font-size: 1.8em; color: var(--accent); font-weight: bold; }
-        .dict-phonetic { font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif; color: #888; }
-        .btn-audio { background: none; border: 1px solid #444; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; color: var(--success); display: flex; align-items: center; justify-content: center; }
-        .btn-audio:hover { background: #333; }
-        .meaning-block { margin-bottom: 15px; }
-        .pos-tag { background: #444; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-right: 8px; text-transform: uppercase; }
-        .def-list { margin: 5px 0 0 20px; padding: 0; color: #ccc; font-size: 0.95em; }
-        .def-list li { margin-bottom: 4px; }
-        .section-header { font-weight: bold; color: var(--accent); margin-top: 20px; margin-bottom: 10px; }
+
+        .dict-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .dict-word {
+            font-size: 1.8em;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .dict-phonetic {
+            font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif;
+            color: #888;
+        }
+
+        .btn-audio {
+            background: none;
+            border: 1px solid #444;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-audio:hover {
+            background: #333;
+        }
+
+        .meaning-block {
+            margin-bottom: 15px;
+        }
+
+        .pos-tag {
+            background: #444;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+
+        .def-list {
+            margin: 5px 0 0 20px;
+            padding: 0;
+            color: #ccc;
+            font-size: 0.95em;
+        }
+
+        .def-list li {
+            margin-bottom: 4px;
+        }
+
+        .section-header {
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
         .example-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 10px;
-            background: #1a1a1a; margin-bottom: 8px; border-radius: 5px; border: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #1a1a1a;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border: 1px solid #333;
         }
-        .example-text { margin-right: 10px; cursor: pointer; }
-        .btn-small-add { background: var(--success); font-size: 0.8em; padding: 5px 10px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .example-text {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .btn-small-add {
+            background: var(--success);
+            font-size: 0.8em;
+            padding: 5px 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* Modals & Cards */
         .card {
-            background: var(--card-bg); margin-bottom: 15px; padding: 20px; border-radius: 10px;
-            display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .card-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .text-content { flex-grow: 1; margin: 0 15px; font-size: 18px; cursor: pointer; }
-        .meta-info { font-size: 0.8em; color: #666; margin-top: 5px; }
-        .empty-state { text-align: center; color: #666; padding: 20px; background: #252525; border-radius: 8px; }
 
-        #review-modal, #library-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
         }
+
+        .text-content {
+            flex-grow: 1;
+            margin: 0 15px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .meta-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            background: #252525;
+            border-radius: 8px;
+        }
+
+        #review-modal,
+        #library-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
         .modal-card {
-            width: 500px; padding: 40px; text-align: center; border: 2px solid var(--accent);
-            background: #222; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            width: 500px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            background: #222;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
         }
-        .masked { background-color: #555; color: transparent; border-radius: 4px; }
-        .btn-forgot { background-color: var(--danger); padding: 15px; font-size: 1.2em; width: 100%; }
-        .btn-remember { background-color: var(--success); padding: 15px; font-size: 1.2em; width: 100%; }
 
+        .masked {
+            background-color: #555;
+            color: transparent;
+            border-radius: 4px;
+        }
+
+        .btn-forgot {
+            background-color: var(--danger);
+            padding: 15px;
+            font-size: 1.2em;
+            width: 100%;
+        }
+
+        .btn-remember {
+            background-color: var(--success);
+            padding: 15px;
+            font-size: 1.2em;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .app-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+                box-sizing: border-box;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px;
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .sidebar>div:first-child {
+                width: 100%;
+                margin-bottom: 5px !important;
+            }
+
+            .menu-btn {
+                flex: 1;
+                padding: 10px;
+                font-size: 0.9em;
+                min-width: 140px;
+            }
+
+            .menu-btn.primary {
+                width: 100%;
+                order: 3;
+            }
+
+            hr {
+                display: none;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .controls {
+                padding: 15px;
+                flex-wrap: wrap;
+            }
+
+            .controls input[type="text"] {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            .modal-card {
+                width: 95% !important;
+                padding: 20px !important;
+            }
+
+            #modal-text {
+                font-size: 1.5em !important;
+            }
+
+            .btn-forgot,
+            .btn-remember {
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .text-content {
+                font-size: 16px;
+                margin: 0 10px;
+            }
+
+            .card-top {
+                align-items: flex-start;
+            }
+
+            .meta-info {
+                margin-left: 35px !important;
+            }
+        }
     </style>
 </head>
+
 <body>
 
     <div class="app-container">
-        
+
         <!-- Sidebar Menu -->
         <div class="sidebar">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -134,8 +489,15 @@
 
             <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 0;">
 
-            <button id="btn-start-review" class="menu-btn primary" style="display: none;" onclick="startReviewSession()">
+            <button id="btn-start-review" class="menu-btn primary" style="display: none;"
+                onclick="startReviewSession()">
                 🚀 Start Review
+            </button>
+
+            <button class="menu-btn"
+                style="margin-top: auto; color: var(--danger); border-color: rgba(255, 100, 100, 0.2);"
+                onclick="logout()">
+                <span>🚪 Logout</span>
             </button>
         </div>
 
@@ -143,15 +505,19 @@
         <div class="main-content">
             <!-- 1. Sentence Input -->
             <div class="controls" style="border-radius: 10px 10px 0 0; margin-bottom: 10px;">
-                 <span style="font-size: 1.2em; margin-right: 10px;">✍️</span>
-                <input type="text" id="newSentence" tabindex="2" placeholder="Type a new sentence (or paste one) to learn..." onkeypress="handleEnter(event)">
+                <span style="font-size: 1.2em; margin-right: 10px;">✍️</span>
+                <textarea id="newSentence" tabindex="2" rows="1" spellcheck="true"
+                    placeholder="Type a new sentence (or paste one) to learn..." onkeypress="handleEnter(event)"
+                    oninput="autoResize(this)"></textarea>
                 <button class="btn-add" tabindex="-1" onclick="addSentence()">Add</button>
             </div>
 
             <!-- 2. Word Lookup -->
             <div class="controls" style="border-radius: 0 0 10px 10px;">
                 <span style="font-size: 1.2em; margin-right: 10px;">🔍</span>
-                <input type="text" id="wordInput" tabindex="1" placeholder="Type a word to find examples (Enter to search)..." onkeypress="handleWordEnter(event)">
+                <textarea id="wordInput" tabindex="1" rows="1" spellcheck="true"
+                    placeholder="Type a word to find examples (Enter to search)..." onkeypress="handleWordEnter(event)"
+                    oninput="autoResize(this)"></textarea>
                 <button class="btn-add" tabindex="-1" onclick="lookupWord()">Search</button>
             </div>
 
@@ -162,34 +528,51 @@
     </div>
 
     <!-- Library Modal Overlay -->
-    <div id="library-modal" onclick="if(event.target === this) this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 900; align-items: center; justify-content: center;">
-        <div class="modal-card" style="width: 800px; height: 80vh; display: flex; flex-direction: column; padding: 20px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+    <div id="library-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 900; align-items: center; justify-content: center;">
+        <div class="modal-card"
+            style="width: 800px; height: 80vh; display: flex; flex-direction: column; padding: 20px; text-align: left;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">
                 <h2 style="margin: 0; color: var(--accent);">📚 Library</h2>
-                <button onclick="document.getElementById('library-modal').style.display='none'" style="background:none; border:none; font-size: 1.5em; color: #666;">✕</button>
+                <button onclick="document.getElementById('library-modal').style.display='none'"
+                    style="background:none; border:none; font-size: 1.5em; color: #666;">✕</button>
             </div>
-            
+
             <div id="library-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;"></div>
         </div>
     </div>
 
     <!-- Review Modal Overlay -->
-    <div id="review-modal" onclick="if(event.target === this) closeReviewModal()">
+    <div id="review-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) closeReviewModal()">
         <div class="modal-card" style="position: relative;">
-            <button onclick="closeReviewModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5em; color: #666; padding: 5px;">✕</button>
-            <div style="color: #888; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Review Time</div>
-            
-            <div id="modal-text" style="font-size: 2em; margin-bottom: 20px; cursor: pointer;" onclick="toggleModalReveal()">
+            <button onclick="closeReviewModal()"
+                style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5em; color: #666; padding: 5px;">✕</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">
+                    Review Time</div>
+                <div id="review-progress" style="color: var(--accent); font-size: 0.9em;"></div>
+            </div>
+
+            <div id="modal-text" style="font-size: 2em; margin-bottom: 20px; cursor: pointer;"
+                onclick="toggleModalReveal()">
                 <span id="modal-text-content" class="masked">Loading...</span>
             </div>
 
             <div style="margin-bottom: 20px;">
-                <button class="btn-play" style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333;" onclick="replayCurrentReview()">
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333;"
+                    onclick="replayCurrentReview()">
                     🔊 Replay Audio
                 </button>
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333; margin-left: 10px;"
+                    onclick="editCurrentReview()">
+                    ✏️ Edit
+                </button>
             </div>
-            
-            <div style="font-size: 0.9em; color: #666; margin-bottom: 30px;">(Click text to reveal)</div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <button class="btn-forgot" onclick="finishReview(false)">Again ❌</button>
@@ -198,63 +581,246 @@
         </div>
     </div>
 
+    <!-- Custom Dialog Modal -->
+    <div id="dialog-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) closeDialog(false)"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 400px; padding: 25px; text-align: center;">
+            <p id="dialog-message" style="margin-bottom: 20px; font-size: 1.1em;"></p>
+            <div id="dialog-input-container" style="margin-bottom: 20px; display: none;">
+                <input type="text" id="dialog-input" style="width: 100%; box-sizing: border-box; text-align: center;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="menu-btn" style="text-align: center; padding: 12px;"
+                    onclick="closeDialog(false)">Cancel</button>
+                <button class="btn-add" onclick="closeDialog(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+        <h1 style="color: var(--accent); margin-bottom: 20px;">EchoCurve</h1>
+        <div class="modal-card" style="width: 350px; padding: 30px; text-align: center; border: 1px solid #444;">
+            <div id="auth-view-home">
+                <p>Welcome. Please enter your username.</p>
+                <div id="auth-error"
+                    style="display: none; color: #ff6b6b; background: rgba(255,100,100,0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
+                </div>
+                <input type="text" id="auth-username" placeholder="Username" list="user-list" autocomplete="on"
+                    style="width: 100%; margin-bottom: 20px; box-sizing: border-box; text-align: center;">
+                <datalist id="user-list"></datalist>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="btn-add" onclick="authLogin()">Login</button>
+                    <button class="menu-btn" style="text-align: center; padding: 10px;"
+                        onclick="authRegister()">Register</button>
+                </div>
+            </div>
+            <div id="auth-view-loading" style="display: none;">
+                <p id="auth-status">Processing...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Status Bar -->
-    <div id="status-bar" style="position: fixed; bottom: 10px; right: 10px; background: #333; padding: 5px 10px; font-size: 0.8em; color: #888; border-radius: 5px; opacity: 0.7;">
+    <div id="status-bar"
+        style="position: fixed; bottom: 10px; right: 10px; background: #333; padding: 5px 10px; font-size: 0.8em; color: #888; border-radius: 5px; opacity: 0.7;">
         Initializing...
     </div>
 
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
     <script>
+        const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
         let sentences = [];
+        let currentUser = localStorage.getItem('echocurve_user');
         const API_URL = '/api/data';
         const synth = window.speechSynthesis;
         let currentReviewItem = null;
+        let modalMouseDownTarget = null; // Track mouse events for modal close behavior
+
 
         function logStatus(msg) {
             const el = document.getElementById('status-bar');
             if (el) { el.textContent = msg; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0.5, 3000); }
         }
 
-        async function loadData() {
-            logStatus('Connecting to Google Drive...');
-            try {
-                const res = await fetch(`${API_URL}?t=${Date.now()}`);
-                if (!res.ok) throw new Error(`Server returned ${res.status}`);
-                
-                const serverData = await res.json();
-                logStatus(`Server has ${serverData.length} items.`);
-                
-                let oldLocalData = localStorage.getItem('english_srs_sentences');
-                if (!oldLocalData) oldLocalData = localStorage.getItem('english_practice_sentences');
-                if (!oldLocalData) oldLocalData = localStorage.getItem('english_srs_sentences_backup');
+        function showAuthStatus(msg) {
+            document.getElementById('auth-view-home').style.display = 'none';
+            document.getElementById('auth-view-loading').style.display = 'block';
+            document.getElementById('auth-status').textContent = msg;
+        }
 
-                if (oldLocalData) {
-                    let localSentences = JSON.parse(oldLocalData);
-                    if (Array.isArray(localSentences) && localSentences.length > 0) {
-                        const serverIds = new Set(serverData.map(s => s.id));
-                        const normalizedLocal = localSentences.map(s => ({
-                            id: s.id || Date.now(),
-                            text: s.text,
-                            nextReview: s.nextReview || Date.now(), 
-                            interval: s.interval || 0,
-                            stage: s.stage || 0
-                        }));
-                        const newItems = normalizedLocal.filter(s => !serverIds.has(s.id));
-                        if (newItems.length > 0) {
-                            sentences = [...newItems, ...serverData];
-                            await save(); 
-                            alert(`🎉 Recovered ${newItems.length} items!`);
-                        } else {
-                            sentences = serverData;
-                        }
-                        localStorage.setItem('english_srs_sentences_backup', oldLocalData);
-                        localStorage.removeItem('english_srs_sentences');
-                        localStorage.removeItem('english_practice_sentences');
-                    } else {
-                        sentences = serverData;
-                    }
+        function hideAuthStatus() {
+            document.getElementById('auth-view-home').style.display = 'block';
+            document.getElementById('auth-view-loading').style.display = 'none';
+        }
+
+        function showAuthError(msg) {
+            const errEl = document.getElementById('auth-error');
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.style.display = 'block';
+            }
+        }
+
+        function clearAuthError() {
+            const errEl = document.getElementById('auth-error');
+            if (errEl) {
+                errEl.style.display = 'none';
+                errEl.textContent = '';
+            }
+        }
+
+        // Custom dialog system (replaces browser confirm/prompt)
+        let dialogResolve = null;
+
+        function showDialog(message, defaultValue = null) {
+            return new Promise((resolve) => {
+                dialogResolve = resolve;
+                document.getElementById('dialog-message').textContent = message;
+                const inputContainer = document.getElementById('dialog-input-container');
+                const input = document.getElementById('dialog-input');
+
+                if (defaultValue !== null) {
+                    inputContainer.style.display = 'block';
+                    input.value = defaultValue;
+                    setTimeout(() => input.focus(), 50);
                 } else {
-                    sentences = serverData;
+                    inputContainer.style.display = 'none';
                 }
+
+                document.getElementById('dialog-modal').style.display = 'flex';
+            });
+        }
+
+        function closeDialog(confirmed) {
+            const modal = document.getElementById('dialog-modal');
+            modal.style.display = 'none';
+
+            if (dialogResolve) {
+                const inputContainer = document.getElementById('dialog-input-container');
+                if (inputContainer.style.display === 'block') {
+                    // Prompt mode - return input value or null
+                    dialogResolve(confirmed ? document.getElementById('dialog-input').value : null);
+                } else {
+                    // Confirm mode - return boolean
+                    dialogResolve(confirmed);
+                }
+                dialogResolve = null;
+            }
+        }
+
+        // Handle Enter key in dialog input
+        document.getElementById('dialog-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                closeDialog(true);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDialog(false);
+            }
+        });
+
+        async function authRegister() {
+            clearAuthError();
+            const username = document.getElementById('auth-username').value.trim();
+            if (!username) return showAuthError('Username required');
+
+            showAuthStatus('Checking registration options...');
+            try {
+                const optionsRes = await fetch(`/api/auth/register-options?username=${username}`);
+                if (!optionsRes.ok) throw new Error('Registration not allowed');
+                const options = await optionsRes.json();
+
+                showAuthStatus('Waiting for authenticator...');
+                const attestation = await startRegistration(options);
+
+                showAuthStatus('Verifying registration...');
+                const verifyRes = await fetch('/api/auth/verify-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, registrationResponse: attestation })
+                });
+
+                const result = await verifyRes.json();
+                if (result.verified) {
+                    currentUser = username;
+                    localStorage.setItem('echocurve_user', username);
+                    saveKnownUsername(username);
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    loadData();
+                } else {
+                    throw new Error(result.error || 'Verification failed');
+                }
+            } catch (err) {
+                showAuthError(`Register error: ${err.message}`);
+                hideAuthStatus();
+            }
+        }
+
+        async function authLogin() {
+            clearAuthError();
+            const username = document.getElementById('auth-username').value.trim();
+            if (!username) return showAuthError('Username required');
+
+            showAuthStatus('Checking login options...');
+            try {
+                const optionsRes = await fetch(`/api/auth/login-options?username=${username}`);
+                if (!optionsRes.ok) {
+                    const errData = await optionsRes.json().catch(() => ({}));
+                    throw new Error(errData.error || 'User not found');
+                }
+                const options = await optionsRes.json();
+
+                showAuthStatus('Waiting for authenticator...');
+                const assertion = await startAuthentication(options);
+
+                showAuthStatus('Verifying login...');
+                const verifyRes = await fetch('/api/auth/verify-authentication', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, authenticationResponse: assertion })
+                });
+
+                const result = await verifyRes.json();
+                if (result.verified) {
+                    currentUser = username;
+                    localStorage.setItem('echocurve_user', username);
+                    saveKnownUsername(username);
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    loadData();
+                } else {
+                    throw new Error(result.error || 'Verification failed');
+                }
+            } catch (err) {
+                showAuthError(`Login error: ${err.message}`);
+                hideAuthStatus();
+            }
+        }
+
+        if (currentUser) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('auth-username').value = currentUser;
+        }
+
+        async function loadData() {
+            if (!currentUser) return;
+            logStatus('Connecting to server...');
+            try {
+                const res = await fetch(`${API_URL}?t=${Date.now()}`, {
+                    headers: { 'X-Username': currentUser }
+                });
+                if (res.status === 401) {
+                    currentUser = null;
+                    localStorage.removeItem('echocurve_user');
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    return;
+                }
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+                sentences = await res.json();
+                logStatus(`Server has ${sentences.length} items.`);
                 render();
             } catch (err) {
                 console.error('Failed to load:', err);
@@ -265,10 +831,14 @@
         }
 
         async function save() {
+            if (!currentUser) return false;
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': currentUser
+                    },
                     body: JSON.stringify(sentences)
                 });
                 if (!res.ok) throw new Error('Server unavailable');
@@ -276,8 +846,7 @@
                 return true;
             } catch (err) {
                 console.error('Failed to save:', err);
-                logStatus('❌ ERROR: Could not save! Is server running?');
-                alert('⚠️ Saving failed! Check if the local server is running.\n\nYour data is NOT saved to disk.');
+                logStatus('❌ ERROR: Could not save!');
                 return false;
             }
         }
@@ -286,30 +855,40 @@
             const now = Date.now();
             const dueCount = sentences.filter(s => s.nextReview <= now).length;
             const btn = document.getElementById('btn-start-review');
-
-            btn.style.display = 'flex'; // Ensure visible
+            if (btn) btn.style.display = 'flex';
 
             if (dueCount > 0) {
-                btn.textContent = `🚀 Start Review (${dueCount})`;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.background = 'var(--accent)';
-                btn.style.cursor = 'pointer';
+                if (btn) {
+                    btn.textContent = `🚀 Start Review (${dueCount})`;
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.background = 'var(--accent)';
+                    btn.style.cursor = 'pointer';
+                }
             } else {
-                btn.textContent = `✅ No Reviews`;
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                btn.style.background = '#444';
-                btn.style.cursor = 'default';
+                if (btn) {
+                    btn.textContent = `✅ No Reviews`;
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.background = '#444';
+                    btn.style.cursor = 'default';
+                }
             }
-            document.getElementById('total-count').textContent = sentences.length;
+            const totalCountEl = document.getElementById('total-count');
+            if (totalCountEl) totalCountEl.textContent = sentences.length;
         }
+
+        let reviewSessionTotal = 0;
+        let reviewSessionCompleted = 0;
 
         function startReviewSession() {
             const now = Date.now();
-            const dueItem = sentences.find(s => s.nextReview <= now);
-            if (dueItem) {
-                startReview(dueItem);
+            const dueItems = sentences.filter(s => s.nextReview <= now);
+            reviewSessionTotal = dueItems.length;
+            reviewSessionCompleted = 0;
+
+            if (dueItems.length > 0) {
+                startReview(dueItems[0]);
             } else {
                 updateDashboard();
             }
@@ -321,33 +900,38 @@
             modal.style.display = 'flex';
             const textEl = document.getElementById('modal-text-content');
             textEl.textContent = item.text;
-            textEl.className = 'masked'; 
+            textEl.className = 'masked';
+
+            // Update progress display
+            const progressEl = document.getElementById('review-progress');
+            if (progressEl && reviewSessionTotal > 0) {
+                progressEl.textContent = `${reviewSessionCompleted + 1} of ${reviewSessionTotal}`;
+            }
+
             speak(item.text);
         }
 
         function finishReview(success) {
             if (!currentReviewItem) return;
             const item = currentReviewItem;
-            
+
             if (success) {
-                // REAL Schedule (Days)
-                // 0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90
-                const intervals = [0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90];
+                const intervals = [0.02, 0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90]; // 0.02 = ~30 min
                 item.stage = Math.min(item.stage + 1, intervals.length);
                 item.interval = intervals[item.stage - 1] || (item.interval * 2);
             } else {
                 item.stage = 1;
-                item.interval = 0.5; // Reset to 12h
+                item.interval = 0.5;
             }
-            // Days to MS
             item.nextReview = Date.now() + (item.interval * 24 * 60 * 60 * 1000);
-            
+
             save();
-            
+            reviewSessionCompleted++;
+
             const now = Date.now();
             const nextItem = sentences.find(s => s.nextReview <= now && s.id !== item.id);
             if (nextItem) {
-                 setTimeout(() => startReview(nextItem), 300);
+                setTimeout(() => startReview(nextItem), 300);
             } else {
                 document.getElementById('review-modal').style.display = 'none';
                 currentReviewItem = null;
@@ -360,9 +944,68 @@
         function replayCurrentReview() { if (currentReviewItem) speak(currentReviewItem.text); }
         function closeReviewModal() { document.getElementById('review-modal').style.display = 'none'; currentReviewItem = null; updateDashboard(); }
 
+        async function editCurrentReview() {
+            if (!currentReviewItem) return;
+            const newText = await showDialog('Edit sentence:', currentReviewItem.text);
+            if (newText && newText !== currentReviewItem.text) {
+                currentReviewItem.text = newText;
+                document.getElementById('modal-text-content').textContent = newText;
+                save();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // ESC closes any open modal
+            if (e.key === 'Escape') {
+                // Close dialog first if open
+                if (document.getElementById('dialog-modal').style.display === 'flex') {
+                    closeDialog(false);
+                    return;
+                }
+                document.getElementById('review-modal').style.display = 'none';
+                document.getElementById('library-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
+                return;
+            }
+
+            // Skip shortcuts when typing in input fields
+            const activeEl = document.activeElement;
+            if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                return;
+            }
+
+            // Review modal shortcuts
+            const reviewModal = document.getElementById('review-modal');
+            if (reviewModal.style.display !== 'flex') return;
+
+            // Prevent space from triggering focused buttons
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                replayCurrentReview(); // Space = Replay
+                return;
+            }
+
+            if (e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                finishReview(false); // Again
+            } else if (e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                replayCurrentReview(); // Replay
+            } else if (e.key.toLowerCase() === 'd') {
+                e.preventDefault();
+                finishReview(true); // Good
+            } else if (e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                editCurrentReview(); // Edit
+            }
+        });
+
         function render() {
             updateDashboard();
             const libList = document.getElementById('library-list');
+            if (!libList) return;
             libList.innerHTML = '';
             const sortedLibrary = [...sentences].sort((a, b) => b.id - a.id);
             if (sortedLibrary.length === 0) {
@@ -396,86 +1039,189 @@
             const input = document.getElementById('newSentence');
             const text = input.value.trim();
             if (text) {
-                // Optimistic add
-                sentences.unshift({ id: Date.now(), text: text, nextReview: Date.now(), interval: 0, stage: 0 });
-                
-                // Try saving
+                sentences.unshift({
+                    id: Date.now(),
+                    text: text,
+                    nextReview: Date.now() + (0.5 * 24 * 60 * 60 * 1000),
+                    interval: 0.5,
+                    stage: 0
+                });
+
                 const success = await save();
-                
                 if (success) {
                     input.value = '';
+                    input.style.height = 'auto';
                     speak(text);
-                    render();
                 } else {
-                    // Revert if failed
                     sentences.shift();
-                    render();
                 }
+                render();
             }
         }
 
-        function handleEnter(e) { if (e.key === 'Enter') addSentence(); }
-        
-        function deleteSentence(id) { if(confirm('Delete?')) { sentences = sentences.filter(s => s.id !== id); save(); } }
-        
-        function editSentence(id) {
+        function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
+
+        async function deleteSentence(id) {
+            const confirmed = await showDialog('Delete this sentence?');
+            if (confirmed) {
+                sentences = sentences.filter(s => s.id !== id);
+                save();
+            }
+        }
+
+        async function editSentence(id) {
             const item = sentences.find(s => s.id === id);
             if (!item) return;
-            const newText = prompt('Edit sentence:', item.text);
-            if (newText !== null && newText.trim() !== '') { item.text = newText.trim(); save(); }
+            const newText = await showDialog('Edit sentence:', item.text);
+            if (newText && newText !== item.text) {
+                item.text = newText;
+                save();
+            }
         }
 
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            // Try better voices
-            const voices = synth.getVoices();
-            const preferredVoice = voices.find(v => v.name.includes('Google US English')) || 
-                                   voices.find(v => v.name.includes('Natural')) ||
-                                   voices.find(v => v.lang === 'en-US');
-            if (preferredVoice) utterance.voice = preferredVoice;
+        // Audio player for Google Cloud TTS
+        let currentAudio = null;
 
+        async function speak(text) {
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            synth.cancel();
+
+            try {
+                // Try Google Cloud TTS first
+                const res = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.audioContent) {
+                        // Play the audio from base64
+                        currentAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+                        currentAudio.play();
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.log('Google TTS unavailable, using browser TTS:', err.message);
+            }
+
+            // Fallback to browser TTS
+            const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            utterance.rate = 0.9;
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+
+            const voices = synth.getVoices();
+            const preferredVoices = ['Google US English', 'Microsoft Zira', 'Microsoft David', 'Samantha', 'Alex', 'Daniel'];
+            let selectedVoice = voices.find(v => preferredVoices.some(p => v.name.includes(p)));
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Neural')));
+            }
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => v.lang.startsWith('en'));
+            }
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
             synth.speak(utterance);
         }
-        synth.onvoiceschanged = () => { console.log('Voices loaded'); };
+
+        // Pre-load voices (some browsers need this)
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = () => synth.getVoices();
+        }
+
+        function handleWordEnter(e) { if (e.key === 'Enter') { e.preventDefault(); lookupWord(); } }
+
+        // Detect if text contains Chinese characters
+        function containsChinese(text) {
+            return /[\u4e00-\u9fff]/.test(text);
+        }
+
+        // Translate Chinese to English using MyMemory API
+        async function translateToEnglish(text) {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh|en`);
+            if (!res.ok) throw new Error('Translation failed');
+            const data = await res.json();
+            if (data.responseStatus !== 200) throw new Error('Translation failed');
+            return data.responseData.translatedText;
+        }
 
         async function lookupWord() {
             const input = document.getElementById('wordInput');
             const word = input.value.trim();
             if (!word) return;
-            const resDiv = document.getElementById('dict-results');
-            resDiv.style.display = 'block';
-            resDiv.innerHTML = '<div style="text-align:center">🔍 Searching...</div>';
+            const resEl = document.getElementById('dict-results');
+            resEl.style.display = 'block';
+
             try {
-                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                if (!response.ok) throw new Error('Not found');
-                const data = await response.json();
-                const entry = data[0];
-                const phoneticText = entry.phonetic || (entry.phonetics.find(p => p.text) || {}).text || '';
-                const phoneticAudio = (entry.phonetics.find(p => p.audio && p.audio !== '') || {}).audio || '';
-                const audioBtn = phoneticAudio ? `<button class="btn-audio" tabindex="-1" onclick="new Audio('${phoneticAudio}').play()">🔊</button>` : '';
-                let meaningsHtml = '';
-                entry.meanings.forEach(m => {
-                    meaningsHtml += `<div class="meaning-block"><span class="pos-tag">${m.partOfSpeech}</span> <span style="color:#ccc">${m.definitions[0].definition}</span></div>`;
-                });
-                const examples = [];
-                entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.example) examples.push(d.example); }); });
-                let examplesHtml = '';
-                if (examples.length > 0) {
-                    examplesHtml = '<div class="section-header">Examples (Click Add)</div>';
-                    examples.slice(0, 5).forEach(ex => {
-                        const safeText = ex.replace(/'/g, "\\'");
-                        examplesHtml += `<div class="example-item"><div class="example-text" onclick="speak('${safeText}')">▶️ "${ex}"</div><button class="btn-small-add" tabindex="-1" onclick="addDictionarySentence('${safeText}', this)">Add</button></div>`;
-                    });
-                } else { examplesHtml = '<div style="color:#888">No examples found.</div>'; }
-                resDiv.innerHTML = `<div class="dict-header"><span class="dict-word">${entry.word}</span><span class="dict-phonetic">${phoneticText}</span>${audioBtn}</div>${meaningsHtml}${examplesHtml}`;
-            } catch (err) { resDiv.innerHTML = `<div style="color:var(--danger)">❌ Word not found.</div>`; }
+                let lookupTerm = word;
+                let translationNote = '';
+
+                // If Chinese, translate first
+                if (containsChinese(word)) {
+                    resEl.innerHTML = `Translating "${word}"...`;
+                    const translated = await translateToEnglish(word);
+                    lookupTerm = translated.toLowerCase().trim();
+                    translationNote = `<div style="margin-bottom: 15px; padding: 10px; background: #2a2a4a; border-radius: 6px; border-left: 3px solid var(--accent);">
+                        <span style="color: #888;">Chinese:</span> <strong>${word}</strong> → 
+                        <span style="color: #888;">English:</span> <strong style="color: var(--accent);">${lookupTerm}</strong>
+                    </div>`;
+                }
+
+                resEl.innerHTML = `Searching for "${lookupTerm}"...`;
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${lookupTerm}`);
+                if (!res.ok) throw new Error('Not found');
+                const data = await res.json();
+                renderDictionary(data[0], translationNote);
+            } catch (err) {
+                resEl.innerHTML = `Could not find definition for "${word}".`;
+            }
         }
 
-        function handleWordEnter(e) { if (e.key === 'Enter') lookupWord(); }
+        function renderDictionary(data, translationNote = '') {
+            const resEl = document.getElementById('dict-results');
+            let html = translationNote + `
+                <div class="dict-header">
+                    <div class="dict-word">${data.word}</div>
+                    <div class="dict-phonetic">${data.phonetic || ''}</div>
+                </div>
+            `;
+            data.meanings.forEach(m => {
+                html += `
+                    <div class="meaning-block">
+                        <span class="pos-tag">${m.partOfSpeech}</span>
+                        <ul class="def-list">
+                            ${m.definitions.slice(0, 3).map(d => {
+                    let defHtml = `<li>${d.definition}`;
+                    if (d.example) {
+                        const escapedExample = d.example.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        defHtml += `
+                                        <div style="margin-top: 8px; padding: 8px 12px; background: #333; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                            <span style="flex-grow: 1; color: #aaa; font-style: italic;">"${d.example}"</span>
+                                            <button onclick="addDictionarySentence('${escapedExample}', this)" 
+                                                style="padding: 4px 12px; font-size: 0.85em; background: var(--accent); border: none; border-radius: 4px; color: white; cursor: pointer; white-space: nowrap;">
+                                                + Add
+                                            </button>
+                                        </div>
+                                    `;
+                    }
+                    defHtml += `</li>`;
+                    return defHtml;
+                }).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            resEl.innerHTML = html;
+        }
+
         function addDictionarySentence(text, btn) {
             document.getElementById('newSentence').value = text;
             addSentence();
@@ -485,22 +1231,90 @@
             setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1000);
         }
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('dict-results').style.display = 'none';
-                const wordInput = document.getElementById('wordInput');
-                wordInput.value = '';
-                wordInput.focus();
-                return;
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                localStorage.removeItem('echocurve_user');
+                sentences = [];
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('auth-username').value = '';
+                hideAuthStatus();
+                updateUserDatalist();
+                render();
             }
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) return;
-                document.getElementById('wordInput').focus();
-            }
-        });
+        }
 
-        setInterval(updateDashboard, 1000);
-        loadData();
+        function saveKnownUsername(username) {
+            let known = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            if (!known.includes(username)) {
+                known.push(username);
+                localStorage.setItem('echocurve_known_users', JSON.stringify(known));
+            }
+            updateUserDatalist();
+        }
+
+        function updateUserDatalist() {
+            const known = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            const list = document.getElementById('user-list');
+            if (list) {
+                list.innerHTML = known.map(u => `<option value="${u}">`).join('');
+            }
+        }
+
+        function autoResize(textarea) {
+            // Reset to single line first
+            textarea.style.height = '';
+            // Only expand if content exceeds the natural height
+            if (textarea.scrollHeight > textarea.clientHeight) {
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+        }
+
+        window.onload = () => {
+            updateUserDatalist();
+            loadData();
+
+            // Focus management - keep cursor on input boxes
+            const sentenceInput = document.getElementById('newSentence');
+            const wordInput = document.getElementById('wordInput');
+            const inputs = [sentenceInput, wordInput];
+
+            // Initial focus on sentence input after auth
+            setTimeout(() => {
+                if (document.getElementById('auth-overlay').style.display === 'none') {
+                    sentenceInput.focus();
+                }
+            }, 100);
+
+            // TAB cycles between the two inputs only
+            inputs.forEach((input, idx) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        inputs[(idx + 1) % inputs.length].focus();
+                    }
+                });
+
+                // Prevent focus from leaving inputs (unless modal is open)
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        const active = document.activeElement;
+                        const authVisible = document.getElementById('auth-overlay').style.display !== 'none';
+                        const dialogVisible = document.getElementById('dialog-modal').style.display === 'flex';
+                        const reviewVisible = document.getElementById('review-modal').style.display === 'flex';
+                        const libraryVisible = document.getElementById('library-modal').style.display === 'flex';
+
+                        // Only refocus if no modal is open and focus left the inputs
+                        if (!authVisible && !dialogVisible && !reviewVisible && !libraryVisible) {
+                            if (!inputs.includes(active)) {
+                                input.focus();
+                            }
+                        }
+                    }, 10);
+                });
+            });
+        };
     </script>
 </body>
+
 </html>

@@ -6,7 +6,15 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["srs", "language-learning", "ebbinghaus", "audio"],
+  "keywords": [
+    "srs",
+    "language-learning",
+    "ebbinghaus",
+    "audio"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@simplewebauthn/server": "^13.2.2"
+  }
 }
