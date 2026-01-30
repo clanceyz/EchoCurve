@@ -16,10 +16,15 @@ const HTML_FILE = path.join(__dirname, 'index.html');
 function getWebAuthnConfig(req) {
     const host = req.headers.host || `localhost:${PORT}`;
     const hostname = host.split(':')[0];
-    const protocol = hostname === 'localhost' ? 'http' : 'https';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const protocol = isLocalhost ? 'http' : 'https';
+    // For HTTPS (production), origin should be just protocol://hostname without port
+    // For HTTP (localhost), include the port
+    const origin = isLocalhost ? `${protocol}://${host}` : `${protocol}://${hostname}`;
+    console.log(`[WebAuthn] Host: ${host}, rpID: ${hostname}, origin: ${origin}`);
     return {
         rpID: hostname,
-        origin: `${protocol}://${host}`
+        origin: origin
     };
 }
 
