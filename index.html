@@ -473,13 +473,41 @@
 
 <body>
 
+    <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+
     <div class="app-container">
 
-        <!-- Sidebar Menu -->
         <div class="sidebar">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="font-size: 1.5em; margin: 0; color: var(--accent);">EchoCurve</h1>
-                <div style="font-size: 0.8em; color: #888;">Spaced Repetition System</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h1 style="font-size: 1.5em; margin: 0; color: var(--accent);">EchoCurve</h1>
+                    <div id="username-display" style="font-size: 0.85em; color: #888; margin-top: 4px;"></div>
+                </div>
+                <div id="settings-menu" style="position: relative;">
+                    <button onclick="toggleSettingsDropdown()"
+                        style="background: #333; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; font-size: 1em; cursor: pointer; color: #888;">
+                        ⚙️
+                    </button>
+                    <div id="settings-dropdown"
+                        style="display: none; position: absolute; top: 35px; right: 0; background: #2d2d2d; border: 1px solid #444; border-radius: 8px; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 100;">
+                        <button onclick="exportData()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #e0e0e0; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            📤 Export Data
+                        </button>
+                        <button onclick="importData()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #e0e0e0; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            📥 Import Data
+                        </button>
+                        <div style="border-top: 1px solid #444; margin: 4px 0;"></div>
+                        <button onclick="logout()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #ff6b6b; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            🚪 Logout
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <button class="menu-btn" onclick="openLibraryModal()">
@@ -492,12 +520,6 @@
             <button id="btn-start-review" class="menu-btn primary" style="display: none;"
                 onclick="startReviewSession()">
                 🚀 Start Review
-            </button>
-
-            <button class="menu-btn"
-                style="margin-top: auto; color: var(--danger); border-color: rgba(255, 100, 100, 0.2);"
-                onclick="logout()">
-                <span>🚪 Logout</span>
             </button>
         </div>
 
@@ -749,6 +771,7 @@
                     localStorage.setItem('echocurve_user', username);
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('username-display').textContent = '👤 ' + username;
                     loadData();
                 } else {
                     throw new Error(result.error || 'Verification failed');
@@ -789,6 +812,7 @@
                     localStorage.setItem('echocurve_user', username);
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('username-display').textContent = '👤 ' + username;
                     loadData();
                 } else {
                     throw new Error(result.error || 'Verification failed');
@@ -802,6 +826,7 @@
         if (currentUser) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('auth-username').value = currentUser;
+            document.getElementById('username-display').textContent = '👤 ' + currentUser;
         }
 
         async function loadData() {
@@ -1230,9 +1255,88 @@
             btn.style.backgroundColor = "#444";
             setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1000);
         }
+        // Settings menu toggle
+        function toggleSettingsDropdown() {
+            const dropdown = document.getElementById('settings-dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('settings-menu');
+            const dropdown = document.getElementById('settings-dropdown');
+            if (menu && !menu.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Export data as JSON file
+        function exportData() {
+            toggleSettingsDropdown();
+            const dataStr = JSON.stringify(sentences, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `echocurve-${currentUser}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logStatus('📤 Data exported successfully!');
+        }
+
+        // Import data from JSON file
+        function importData() {
+            toggleSettingsDropdown();
+            document.getElementById('import-file-input').click();
+        }
+
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const importedData = JSON.parse(text);
+
+                if (!Array.isArray(importedData)) {
+                    throw new Error('Invalid data format');
+                }
+
+                const confirmed = await showDialog(`Import ${importedData.length} sentences? This will merge with your existing data.`);
+                if (!confirmed) return;
+
+                // Merge imported data with existing (avoid duplicates by text)
+                const existingTexts = new Set(sentences.map(s => s.text));
+                let addedCount = 0;
+                importedData.forEach(item => {
+                    if (!existingTexts.has(item.text)) {
+                        sentences.push({
+                            id: Date.now() + Math.random(),
+                            text: item.text,
+                            nextReview: item.nextReview || Date.now(),
+                            interval: item.interval || 0.5,
+                            stage: item.stage || 0
+                        });
+                        addedCount++;
+                    }
+                });
+
+                await save();
+                logStatus(`📥 Imported ${addedCount} new sentences!`);
+            } catch (err) {
+                logStatus('❌ Import failed: Invalid file format');
+                console.error('Import error:', err);
+            }
+
+            // Reset file input
+            event.target.value = '';
+        }
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
+                toggleSettingsDropdown();
                 currentUser = null;
                 localStorage.removeItem('echocurve_user');
                 sentences = [];
