@@ -31,9 +31,11 @@ function base64UrlDecode(str) {
 }
 
 function createToken(username) {
+    const role = username.toLowerCase() === 'admin' ? 'admin' : 'user';
     const header = { alg: 'HS256', typ: 'JWT' };
     const payload = {
         username,
+        role,
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + (JWT_EXPIRY_DAYS * 24 * 60 * 60)
     };
@@ -76,7 +78,7 @@ function verifyToken(token) {
             console.log('[JWT] Token expired');
             return null;
         }
-        return payload.username;
+        return payload; // Return full payload including role
     } catch (e) {
         console.log('[JWT] Invalid payload');
         return null;
@@ -430,6 +432,48 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ... (JWT logic remains same)
+
+    // --- Public Library Endpoints ---
+
+    if (req.method === 'GET' && url.pathname === '/api/public-library') {
+        const dialogs = publicStore.getDialogs();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(dialogs));
+        return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/public-library/import') {
+        const authenticatedUser = getAuthenticatedUser(req);
+        if (!authenticatedUser || authenticatedUser.role !== 'admin') {
+            res.writeHead(403);
+            res.end(JSON.stringify({ error: 'Admin access required' }));
+            return;
+        }
+
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const { title, text } = JSON.parse(body);
+                if (!title || !text) throw new Error('Missing title or text');
+
+                // Split multi-line text into sentences
+                const sentences = text.split('\n')
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+
+                const newDialog = publicStore.addDialog(title, sentences);
+                res.writeHead(201, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(newDialog));
+            } catch (e) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: e.message }));
+            }
+        });
+        return;
+    }
+
     // --- Data Endpoints (User-specific, JWT protected) ---
 
     const authenticatedUser = getAuthenticatedUser(req);
@@ -441,7 +485,7 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
-        const data = userStore.getUserData(authenticatedUser);
+        const data = userStore.getUserData(authenticatedUser.username);
         res.writeHead(200, {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -462,7 +506,7 @@ const server = http.createServer(async (req, res) => {
         req.on('end', () => {
             try {
                 JSON.parse(body);
-                userStore.saveUserData(authenticatedUser, body);
+                userStore.saveUserData(authenticatedUser.username, body);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true }));
             } catch (e) {

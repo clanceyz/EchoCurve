@@ -555,6 +555,15 @@
                 <span id="total-count" class="badge">0</span>
             </button>
 
+            <button class="menu-btn" onclick="openPublicLibraryModal()">
+                <span>🌐 Public Library</span>
+            </button>
+
+            <button id="admin-import-btn" class="menu-btn" onclick="openAdminImportModal()"
+                style="display: none; border-color: var(--warning);">
+                <span>🛠️ Admin Import</span>
+            </button>
+
             <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 0;">
 
             <button id="btn-start-review" class="menu-btn primary" style="display: none;"
@@ -595,6 +604,44 @@
             <div id="dict-results" class="dict-results" style="display: none;"></div>
         </div>
 
+    </div>
+
+    <!-- Public Library Modal Overlay -->
+    <div id="public-library-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-card"
+            style="width: 600px; max-height: 80vh; display: flex; flex-direction: column; padding: 25px; text-align: left;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: var(--accent);">🌐 Public Library</h2>
+                <button onclick="document.getElementById('public-library-modal').style.display='none'"
+                    style="background:none; border:none; font-size: 1.5em; color: #666; cursor: pointer;">✕</button>
+            </div>
+            <div id="public-library-list" style="overflow-y: auto; flex-grow: 1;">
+                <p style="color: #888; text-align: center;">Loading shared dialogs...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Import Modal Overlay -->
+    <div id="admin-import-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 500px; padding: 25px; text-align: left;">
+            <h2 style="margin: 0 0 20px 0; color: var(--warning);">🛠️ Admin Import</h2>
+            <p style="color: #888; margin-bottom: 15px;">Create a new public dialog by pasting multiple lines.</p>
+            <input type="text" id="admin-import-title" placeholder="Dialog Title (e.g., Greetings)"
+                style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
+            <textarea id="admin-import-text" placeholder="Sentence 1&#10;Sentence 2&#10;Sentence 3..."
+                style="width: 100%; height: 200px; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="menu-btn" style="text-align: center; padding: 12px;"
+                    onclick="document.getElementById('admin-import-modal').style.display='none'">Cancel</button>
+                <button class="btn-add" onclick="submitAdminImport()" style="background: var(--warning);">Import
+                    Public</button>
+            </div>
+        </div>
     </div>
 
     <!-- Library Modal Overlay -->
@@ -705,10 +752,36 @@
         let sentences = [];
         let currentUser = localStorage.getItem('echocurve_user');
         let currentToken = localStorage.getItem('echocurve_token');
+        let userRole = 'user'; // Default role
         const API_URL = '/api/data';
         const synth = window.speechSynthesis;
         let currentReviewItem = null;
         let modalMouseDownTarget = null; // Track mouse events for modal close behavior
+
+        // Decode JWT to get user role
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updateUserRole() {
+            if (currentToken) {
+                const payload = parseJwt(currentToken);
+                if (payload) {
+                    userRole = payload.role || 'user';
+                    const adminBtn = document.getElementById('admin-import-btn');
+                    if (adminBtn) adminBtn.style.display = userRole === 'admin' ? 'flex' : 'none';
+                }
+            }
+        }
 
 
         function logStatus(msg) {
@@ -893,6 +966,119 @@
             }
         }
 
+        async function logout() {
+            localStorage.removeItem('echocurve_user');
+            localStorage.removeItem('echocurve_token');
+            saveKnownUsername(currentUser);
+            location.reload();
+        }
+
+        // --- Public Library Functions ---
+
+        async function openPublicLibraryModal() {
+            const modal = document.getElementById('public-library-modal');
+            modal.style.display = 'flex';
+            const listEl = document.getElementById('public-library-list');
+            listEl.innerHTML = '<p style="text-align: center; color: #888;">Loading shared dialogs...</p>';
+
+            try {
+                const res = await fetch('/api/public-library');
+                if (!res.ok) throw new Error('Failed to fetch public library');
+                const dialogs = await res.json();
+                renderPublicLibrary(dialogs);
+            } catch (err) {
+                listEl.innerHTML = `<p style="text-align: center; color: var(--danger);">Error: ${err.message}</p>`;
+            }
+        }
+
+        function renderPublicLibrary(dialogs) {
+            const listEl = document.getElementById('public-library-list');
+            if (dialogs.length === 0) {
+                listEl.innerHTML = '<p style="text-align: center; color: #888;">No public dialogs available yet.</p>';
+                return;
+            }
+
+            listEl.innerHTML = dialogs.map(d => `
+                <div class="public-dialog-item">
+                    <div>
+                        <div style="font-weight: bold; font-size: 1.1em; color: var(--accent);">${d.title}</div>
+                        <div style="font-size: 0.85em; color: #888;">${d.sentences.length} sentences</div>
+                    </div>
+                    <button class="btn-add-public" onclick="addPublicDialogToMyLibrary(${d.id})">
+                        + Add to My Library
+                    </button>
+                </div>
+            `).join('');
+
+            // Store fetched dialogs globally for easy adding
+            window.latestPublicDialogs = dialogs;
+        }
+
+        async function addPublicDialogToMyLibrary(dialogId) {
+            const dialog = window.latestPublicDialogs.find(d => d.id === dialogId);
+            if (!dialog) return;
+
+            const confirmed = await showDialog(`Add "${dialog.title}" to your library?`);
+            if (!confirmed) return;
+
+            // Map public sentences to user format, tagging them with dialog title
+            const newSentences = dialog.sentences.map(s => ({
+                id: Date.now() + Math.random(),
+                text: s.text,
+                nextReview: Date.now() + (0.5 * 24 * 60 * 60 * 1000),
+                interval: 0.5,
+                stage: 0,
+                dialogTitle: dialog.title
+            }));
+
+            // Add to front of library
+            sentences = [...newSentences, ...sentences];
+            await save();
+            render();
+            logStatus(`✅ Added "${dialog.title}" to your library!`);
+            document.getElementById('public-library-modal').style.display = 'none';
+        }
+
+        // --- Admin Import Functions ---
+
+        function openAdminImportModal() {
+            if (userRole !== 'admin') return;
+            document.getElementById('admin-import-modal').style.display = 'flex';
+            document.getElementById('admin-import-title').value = '';
+            document.getElementById('admin-import-text').value = '';
+            document.getElementById('admin-import-title').focus();
+        }
+
+        async function submitAdminImport() {
+            const title = document.getElementById('admin-import-title').value.trim();
+            const text = document.getElementById('admin-import-text').value.trim();
+
+            if (!title || !text) {
+                logStatus('❌ Title and text required');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/public-library/import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ title, text })
+                });
+
+                if (res.ok) {
+                    logStatus(`✅ Public dialog "${title}" imported!`);
+                    document.getElementById('admin-import-modal').style.display = 'none';
+                } else {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Import failed');
+                }
+            } catch (err) {
+                logStatus(`❌ Error: ${err.message}`);
+            }
+        }
         async function loadData() {
             if (!currentUser || !currentToken) return;
             logStatus('Connecting to server...');
@@ -901,23 +1087,23 @@
                     headers: { 'Authorization': `Bearer ${currentToken}` }
                 });
                 if (res.status === 401) {
-                    // Token invalid or expired - require re-login
-                    currentUser = null;
-                    currentToken = null;
-                    localStorage.removeItem('echocurve_user');
-                    localStorage.removeItem('echocurve_token');
-                    document.getElementById('auth-overlay').style.display = 'flex';
-                    logStatus('Session expired. Please log in again.');
+                    logout();
                     return;
                 }
                 if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
                 sentences = await res.json();
-                logStatus(`Server has ${sentences.length} items.`);
+                logStatus('✅ Connected');
                 render();
+
+                // Onboarding flow for new users
+                if (sentences.length === 0) {
+                    const explore = await showDialog('Your library is empty. Would you like to explore the Public Library for some shared dialogs?');
+                    if (explore) openPublicLibraryModal();
+                }
             } catch (err) {
                 console.error('Failed to load:', err);
-                logStatus('Error loading data.');
+                logStatus('⚠️ Offline mode');
                 sentences = [];
                 render();
             }
@@ -935,22 +1121,24 @@
                     body: JSON.stringify(sentences)
                 });
                 if (res.status === 401) {
-                    // Token expired during session
-                    currentUser = null;
-                    currentToken = null;
-                    localStorage.removeItem('echocurve_user');
-                    localStorage.removeItem('echocurve_token');
-                    document.getElementById('auth-overlay').style.display = 'flex';
-                    logStatus('Session expired. Please log in again.');
+                    logout();
                     return false;
                 }
-                if (!res.ok) throw new Error('Server unavailable');
-                render();
+                if (!res.ok) throw new Error('Save failed');
+                updateDashboard();
                 return true;
             } catch (err) {
-                console.error('Failed to save:', err);
-                logStatus('❌ ERROR: Could not save!');
+                logStatus('❌ Save failed');
                 return false;
+            }
+        }
+
+        async function deleteDialog(title) {
+            const confirmed = await showDialog(`Delete all sentences in "${title}"?`);
+            if (confirmed) {
+                sentences = sentences.filter(s => s.dialogTitle !== title);
+                await save();
+                render();
             }
         }
 
@@ -1110,22 +1298,31 @@
         });
 
         function render() {
-            updateDashboard();
             const libList = document.getElementById('library-list');
-            if (!libList) return;
-            libList.innerHTML = '';
-            const sortedLibrary = [...sentences].sort((a, b) => b.id - a.id);
-            if (sortedLibrary.length === 0) {
-                libList.innerHTML = '<div class="empty-state">Library is empty. Add a sentence above!</div>';
-            } else {
-                sortedLibrary.forEach(s => {
-                    const nextDate = new Date(s.nextReview).toLocaleDateString();
-                    const isDue = s.nextReview <= Date.now();
-                    const statusColor = isDue ? 'var(--accent)' : '#666';
-                    const div = document.createElement('div');
-                    div.className = 'card';
+            if (libList) {
+                libList.innerHTML = '';
 
-                    // Build DOM safely to prevent XSS
+                // Group sentences by dialog
+                const groups = {};
+                const ungrouped = [];
+
+                sentences.forEach(s => {
+                    if (s.dialogTitle) {
+                        if (!groups[s.dialogTitle]) groups[s.dialogTitle] = [];
+                        groups[s.dialogTitle].push(s);
+                    } else {
+                        ungrouped.push(s);
+                    }
+                });
+
+                const renderSentence = (s) => {
+                    const div = document.createElement('div');
+                    div.className = 'sentence-card';
+                    const now = Date.now();
+                    const isDue = s.nextReview <= now;
+                    const nextDate = new Date(s.nextReview).toLocaleDateString();
+                    const statusColor = isDue ? 'var(--danger)' : '#888';
+
                     const cardTop = document.createElement('div');
                     cardTop.className = 'card-top';
 
@@ -1137,7 +1334,7 @@
 
                     const textSpan = document.createElement('span');
                     textSpan.className = 'text-content';
-                    textSpan.textContent = s.text; // Safe: textContent escapes HTML
+                    textSpan.textContent = s.text;
                     textSpan.onclick = () => editSentence(s.id);
 
                     const btnGroup = document.createElement('div');
@@ -1169,11 +1366,40 @@
 
                     div.appendChild(cardTop);
                     div.appendChild(metaDiv);
-                    libList.appendChild(div);
-                });
-            }
-        }
+                    return div;
+                };
 
+                // Render dialog groups
+                Object.keys(groups).forEach(title => {
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'dialog-group-header';
+                    groupHeader.innerHTML = `
+                        <span class="dialog-title">${title} (${groups[title].length})</span>
+                        <button class="btn-del" onclick="deleteDialog('${title}')" style="font-size: 0.8em;">🗑️ Delete Dialog</button>
+                    `;
+                    libList.appendChild(groupHeader);
+
+                    groups[title].forEach(s => libList.appendChild(renderSentence(s)));
+                });
+
+                // Render ungrouped sentences
+                if (ungrouped.length > 0) {
+                    if (Object.keys(groups).length > 0) {
+                        const otherHeader = document.createElement('div');
+                        otherHeader.className = 'dialog-group-header';
+                        otherHeader.style.borderLeftColor = '#666';
+                        otherHeader.innerHTML = '<span class="dialog-title" style="color: #888;">Misc Sentences</span>';
+                        libList.appendChild(otherHeader);
+                    }
+                    ungrouped.forEach(s => libList.appendChild(renderSentence(s)));
+                }
+
+                if (sentences.length === 0) {
+                    libList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 50px;">Library is empty.</p>';
+                }
+            }
+            updateDashboard();
+        }
         async function addSentence() {
             const input = document.getElementById('newSentence');
             const text = input.value.trim();
