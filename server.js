@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const {
     generateRegistrationOptions,
     verifyRegistrationResponse,
@@ -8,6 +9,88 @@ const {
     verifyAuthenticationResponse,
 } = require('@simplewebauthn/server');
 const userStore = require('./users');
+
+// JWT Configuration
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const JWT_EXPIRY_DAYS = 30;
+
+if (!process.env.JWT_SECRET) {
+    console.log('[Security] JWT_SECRET not set, using random secret (tokens will invalidate on restart)');
+}
+
+// JWT Utilities (no external dependencies)
+function base64UrlEncode(data) {
+    return Buffer.from(data).toString('base64')
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlDecode(str) {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    return Buffer.from(str, 'base64').toString();
+}
+
+function createToken(username) {
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const payload = {
+        username,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + (JWT_EXPIRY_DAYS * 24 * 60 * 60)
+    };
+
+    const headerB64 = base64UrlEncode(JSON.stringify(header));
+    const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+    const signature = crypto
+        .createHmac('sha256', JWT_SECRET)
+        .update(`${headerB64}.${payloadB64}`)
+        .digest('base64')
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    return `${headerB64}.${payloadB64}.${signature}`;
+}
+
+function verifyToken(token) {
+    if (!token) return null;
+
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const [headerB64, payloadB64, signature] = parts;
+
+    // Verify signature
+    const expectedSig = crypto
+        .createHmac('sha256', JWT_SECRET)
+        .update(`${headerB64}.${payloadB64}`)
+        .digest('base64')
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    if (signature !== expectedSig) {
+        console.log('[JWT] Invalid signature');
+        return null;
+    }
+
+    // Decode and check expiry
+    try {
+        const payload = JSON.parse(base64UrlDecode(payloadB64));
+        if (payload.exp < Math.floor(Date.now() / 1000)) {
+            console.log('[JWT] Token expired');
+            return null;
+        }
+        return payload.username;
+    } catch (e) {
+        console.log('[JWT] Invalid payload');
+        return null;
+    }
+}
+
+// Extract token from Authorization header
+function getAuthenticatedUser(req) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+    return verifyToken(authHeader.slice(7));
+}
 
 const PORT = process.env.PORT || 3000;
 const HTML_FILE = path.join(__dirname, 'index.html');
@@ -32,10 +115,15 @@ function getWebAuthnConfig(req) {
 const challenges = new Map();
 
 const server = http.createServer(async (req, res) => {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // CORS headers - reflect origin (safe since JWT provides access control)
+    // This allows the app to be deployed anywhere while maintaining security
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Username');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
@@ -61,7 +149,7 @@ const server = http.createServer(async (req, res) => {
 
     // --- WebAuthn Registration ---
     if (req.method === 'GET' && url.pathname === '/api/auth/register-options') {
-        const username = url.searchParams.get('username');
+        const username = (url.searchParams.get('username') || '').toLowerCase().trim();
         console.log(`[Auth] Registration options requested for: ${username}`);
         if (!username) {
             res.writeHead(400);
@@ -103,7 +191,8 @@ const server = http.createServer(async (req, res) => {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {
-            const { username, registrationResponse } = JSON.parse(body);
+            const { username: rawUsername, registrationResponse } = JSON.parse(body);
+            const username = (rawUsername || '').toLowerCase().trim();
             console.log(`[Auth] Verifying registration for: ${username}`);
             const expectedChallenge = challenges.get(username);
 
@@ -139,9 +228,10 @@ const server = http.createServer(async (req, res) => {
                     });
 
                     userStore.saveUser(user);
-                    console.log(`[Auth] Registration successful for ${username}`);
+                    const token = createToken(username);
+                    console.log(`[Auth] Registration successful for ${username}, token issued`);
                     res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ verified: true }));
+                    res.end(JSON.stringify({ verified: true, token }));
                 } else {
                     console.warn(`[Auth] Registration verification failed for ${username}`);
                     res.writeHead(400);
@@ -158,7 +248,7 @@ const server = http.createServer(async (req, res) => {
 
     // --- WebAuthn Authentication ---
     if (req.method === 'GET' && url.pathname === '/api/auth/login-options') {
-        const username = url.searchParams.get('username');
+        const username = (url.searchParams.get('username') || '').toLowerCase().trim();
         console.log(`[Auth] Login options requested for: ${username}`);
         const user = userStore.getUser(username);
         if (!user) {
@@ -208,7 +298,8 @@ const server = http.createServer(async (req, res) => {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {
-            const { username, authenticationResponse } = JSON.parse(body);
+            const { username: rawUsername, authenticationResponse } = JSON.parse(body);
+            const username = (rawUsername || '').toLowerCase().trim();
             console.log(`[Auth] Verifying login for: ${username}`);
             console.log(`[Auth] Full auth response:`, JSON.stringify(authenticationResponse, null, 2));
             const user = userStore.getUser(username);
@@ -257,9 +348,10 @@ const server = http.createServer(async (req, res) => {
                 if (verification.verified) {
                     dbAuthenticator.counter = verification.authenticationInfo.newCounter;
                     userStore.saveUser(user);
-                    console.log(`[Auth] Login successful for ${username}`);
+                    const token = createToken(username);
+                    console.log(`[Auth] Login successful for ${username}, token issued`);
                     res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ verified: true }));
+                    res.end(JSON.stringify({ verified: true, token }));
                 } else {
                     console.warn(`[Auth] Login verification failed for ${username}`);
                     res.writeHead(400);
@@ -330,9 +422,9 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // --- Data Endpoints (User-specific) ---
+    // --- Data Endpoints (User-specific, JWT protected) ---
 
-    const authenticatedUser = req.headers['x-username'];
+    const authenticatedUser = getAuthenticatedUser(req);
 
     if (req.method === 'GET' && url.pathname === '/api/data') {
         if (!authenticatedUser) {

@@ -656,6 +656,7 @@
         const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
         let sentences = [];
         let currentUser = localStorage.getItem('echocurve_user');
+        let currentToken = localStorage.getItem('echocurve_token');
         const API_URL = '/api/data';
         const synth = window.speechSynthesis;
         let currentReviewItem = null;
@@ -746,7 +747,7 @@
 
         async function authRegister() {
             clearAuthError();
-            const username = document.getElementById('auth-username').value.trim();
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
             if (!username) return showAuthError('Username required');
 
             showAuthStatus('Checking registration options...');
@@ -766,9 +767,11 @@
                 });
 
                 const result = await verifyRes.json();
-                if (result.verified) {
+                if (result.verified && result.token) {
                     currentUser = username;
+                    currentToken = result.token;
                     localStorage.setItem('echocurve_user', username);
+                    localStorage.setItem('echocurve_token', result.token);
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('username-display').textContent = '👤 ' + username;
@@ -784,7 +787,7 @@
 
         async function authLogin() {
             clearAuthError();
-            const username = document.getElementById('auth-username').value.trim();
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
             if (!username) return showAuthError('Username required');
 
             showAuthStatus('Checking login options...');
@@ -807,9 +810,11 @@
                 });
 
                 const result = await verifyRes.json();
-                if (result.verified) {
+                if (result.verified && result.token) {
                     currentUser = username;
+                    currentToken = result.token;
                     localStorage.setItem('echocurve_user', username);
+                    localStorage.setItem('echocurve_token', result.token);
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('username-display').textContent = '👤 ' + username;
@@ -823,23 +828,38 @@
             }
         }
 
-        if (currentUser) {
+        if (currentUser && currentToken) {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('auth-username').value = currentUser;
             document.getElementById('username-display').textContent = '👤 ' + currentUser;
+        } else {
+            // Clear any partial state
+            currentUser = null;
+            currentToken = null;
+            localStorage.removeItem('echocurve_user');
+            localStorage.removeItem('echocurve_token');
+            // Pre-fill with last known username for convenience
+            const knownUsers = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            if (knownUsers.length > 0) {
+                document.getElementById('auth-username').value = knownUsers[knownUsers.length - 1];
+            }
         }
 
         async function loadData() {
-            if (!currentUser) return;
+            if (!currentUser || !currentToken) return;
             logStatus('Connecting to server...');
             try {
                 const res = await fetch(`${API_URL}?t=${Date.now()}`, {
-                    headers: { 'X-Username': currentUser }
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
                 });
                 if (res.status === 401) {
+                    // Token invalid or expired - require re-login
                     currentUser = null;
+                    currentToken = null;
                     localStorage.removeItem('echocurve_user');
+                    localStorage.removeItem('echocurve_token');
                     document.getElementById('auth-overlay').style.display = 'flex';
+                    logStatus('Session expired. Please log in again.');
                     return;
                 }
                 if (!res.ok) throw new Error(`Server returned ${res.status}`);
@@ -856,16 +876,26 @@
         }
 
         async function save() {
-            if (!currentUser) return false;
+            if (!currentUser || !currentToken) return false;
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Username': currentUser
+                        'Authorization': `Bearer ${currentToken}`
                     },
                     body: JSON.stringify(sentences)
                 });
+                if (res.status === 401) {
+                    // Token expired during session
+                    currentUser = null;
+                    currentToken = null;
+                    localStorage.removeItem('echocurve_user');
+                    localStorage.removeItem('echocurve_token');
+                    document.getElementById('auth-overlay').style.display = 'flex';
+                    logStatus('Session expired. Please log in again.');
+                    return false;
+                }
                 if (!res.ok) throw new Error('Server unavailable');
                 render();
                 return true;
@@ -1042,19 +1072,51 @@
                     const statusColor = isDue ? 'var(--accent)' : '#666';
                     const div = document.createElement('div');
                     div.className = 'card';
-                    div.innerHTML = `
-                        <div class="card-top">
-                            <button class="btn-play" tabindex="-1" onclick="speak('${s.text.replace(/'/g, "\\'")}')">▶️</button>
-                            <span class="text-content" onclick="editSentence(${s.id})">${s.text}</span>
-                            <div>
-                                <button class="btn-del" style="color:var(--warning); margin-right:5px;" tabindex="-1" onclick="editSentence(${s.id})">✏️</button>
-                                <button class="btn-del" tabindex="-1" onclick="deleteSentence(${s.id})">🗑️</button>
-                            </div>
-                        </div>
-                        <div class="meta-info" style="color:${statusColor}; margin-left: 45px;">
-                            ${isDue ? '<b>DUE NOW</b>' : 'Next: ' + nextDate} (Interval: ${s.interval}d)
-                        </div>
-                    `;
+
+                    // Build DOM safely to prevent XSS
+                    const cardTop = document.createElement('div');
+                    cardTop.className = 'card-top';
+
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'btn-play';
+                    playBtn.tabIndex = -1;
+                    playBtn.textContent = '▶️';
+                    playBtn.onclick = () => speak(s.text);
+
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'text-content';
+                    textSpan.textContent = s.text; // Safe: textContent escapes HTML
+                    textSpan.onclick = () => editSentence(s.id);
+
+                    const btnGroup = document.createElement('div');
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn-del';
+                    editBtn.style.cssText = 'color:var(--warning); margin-right:5px;';
+                    editBtn.tabIndex = -1;
+                    editBtn.textContent = '✏️';
+                    editBtn.onclick = () => editSentence(s.id);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn-del';
+                    delBtn.tabIndex = -1;
+                    delBtn.textContent = '🗑️';
+                    delBtn.onclick = () => deleteSentence(s.id);
+
+                    btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(delBtn);
+                    cardTop.appendChild(playBtn);
+                    cardTop.appendChild(textSpan);
+                    cardTop.appendChild(btnGroup);
+
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'meta-info';
+                    metaDiv.style.cssText = `color:${statusColor}; margin-left: 45px;`;
+                    metaDiv.innerHTML = isDue ? '<b>DUE NOW</b>' : 'Next: ' + nextDate;
+                    metaDiv.innerHTML += ` (Interval: ${s.interval}d)`;
+
+                    div.appendChild(cardTop);
+                    div.appendChild(metaDiv);
                     libList.appendChild(div);
                 });
             }
@@ -1338,7 +1400,9 @@
             if (confirm('Are you sure you want to logout?')) {
                 toggleSettingsDropdown();
                 currentUser = null;
+                currentToken = null;
                 localStorage.removeItem('echocurve_user');
+                localStorage.removeItem('echocurve_token');
                 sentences = [];
                 document.getElementById('auth-overlay').style.display = 'flex';
                 document.getElementById('auth-username').value = '';

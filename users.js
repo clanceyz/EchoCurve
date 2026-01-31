@@ -1,7 +1,26 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = process.env.DATA_PATH || path.join(__dirname, 'data');
+// Use Render's persistent disk at /data if available, otherwise use local ./data
+function getDataDir() {
+    // Check for Render persistent disk
+    const renderDataPath = '/data';
+    try {
+        if (fs.existsSync(renderDataPath) && fs.statSync(renderDataPath).isDirectory()) {
+            console.log('[Storage] Using Render persistent disk at /data');
+            return renderDataPath;
+        }
+    } catch (e) {
+        // /data not accessible (Windows or no persistent disk)
+    }
+    
+    // Fall back to local data directory
+    const localPath = path.join(__dirname, 'data');
+    console.log(`[Storage] Using local storage at ${localPath}`);
+    return localPath;
+}
+
+const DATA_DIR = process.env.DATA_PATH || getDataDir();
 const USERS_DIR = path.join(DATA_DIR, 'users');
 
 // Ensure directories exist
