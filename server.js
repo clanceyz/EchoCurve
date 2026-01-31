@@ -161,7 +161,14 @@ const server = http.createServer(async (req, res) => {
         }
 
         const user = userStore.getUser(username);
-        const userDevices = (user && user.devices) ? user.devices.filter(d => d.credentialID) : [];
+        if (user) {
+            console.warn(`[Auth] Registration attempted for existing user: ${username}`);
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Username already taken' }));
+            return;
+        }
+
+        const userDevices = []; // New user, no devices yet
 
         try {
             const { rpID } = getWebAuthnConfig(req);
@@ -198,6 +205,13 @@ const server = http.createServer(async (req, res) => {
             const username = (rawUsername || '').toLowerCase().trim();
             console.log(`[Auth] Verifying registration for: ${username}`);
             const expectedChallenge = challenges.get(username);
+
+            // Double check user doesn't exist (second guard)
+            if (userStore.getUser(username)) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: 'Username already taken' }));
+                return;
+            }
 
             try {
                 const { rpID, origin } = getWebAuthnConfig(req);
