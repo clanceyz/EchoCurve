@@ -179,6 +179,31 @@
             padding: 5px;
         }
 
+        .btn-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #555;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            line-height: 1;
+            color: #ccc;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-clear:hover {
+            background: #777;
+            color: #fff;
+        }
+
         /* Dictionary */
         .dict-results {
             background: #222;
@@ -427,13 +452,28 @@
                 flex-wrap: wrap;
             }
 
-            .controls input[type="text"] {
+            .controls input[type="text"],
+            .controls textarea {
                 width: 100%;
                 margin-bottom: 5px;
+                font-size: 14px;
             }
 
-            .controls button {
+            .controls>div {
                 width: 100%;
+            }
+
+            .controls button.btn-add {
+                width: 100%;
+            }
+
+            /* Shorter placeholders on mobile */
+            #newSentence::placeholder {
+                font-size: 13px;
+            }
+
+            #wordInput::placeholder {
+                font-size: 13px;
             }
 
             .modal-card {
@@ -528,18 +568,26 @@
             <!-- 1. Sentence Input -->
             <div class="controls" style="border-radius: 10px 10px 0 0; margin-bottom: 10px;">
                 <span style="font-size: 1.2em; margin-right: 10px;">✍️</span>
-                <textarea id="newSentence" tabindex="2" rows="1" spellcheck="true"
-                    placeholder="Type a new sentence (or paste one) to learn..." onkeypress="handleEnter(event)"
-                    oninput="autoResize(this)"></textarea>
+                <div style="position: relative; flex-grow: 1; display: flex;">
+                    <textarea id="newSentence" tabindex="2" rows="1" spellcheck="true"
+                        placeholder="Add a new sentence..." onkeypress="handleEnter(event)"
+                        oninput="autoResize(this); toggleClearBtn('newSentence')"></textarea>
+                    <button id="clear-newSentence" class="btn-clear" onclick="clearInput('newSentence')"
+                        style="display: none;">×</button>
+                </div>
                 <button class="btn-add" tabindex="-1" onclick="addSentence()">Add</button>
             </div>
 
             <!-- 2. Word Lookup -->
             <div class="controls" style="border-radius: 0 0 10px 10px;">
                 <span style="font-size: 1.2em; margin-right: 10px;">🔍</span>
-                <textarea id="wordInput" tabindex="1" rows="1" spellcheck="true"
-                    placeholder="Type a word to find examples (Enter to search)..." onkeypress="handleWordEnter(event)"
-                    oninput="autoResize(this)"></textarea>
+                <div style="position: relative; flex-grow: 1; display: flex;">
+                    <textarea id="wordInput" tabindex="1" rows="1" spellcheck="true" placeholder="Search for a word..."
+                        onkeypress="handleWordEnter(event)"
+                        oninput="autoResize(this); toggleClearBtn('wordInput')"></textarea>
+                    <button id="clear-wordInput" class="btn-clear" onclick="clearInput('wordInput')"
+                        style="display: none;">×</button>
+                </div>
                 <button class="btn-add" tabindex="-1" onclick="lookupWord()">Search</button>
             </div>
 
@@ -1435,6 +1483,24 @@
             // Only expand if content exceeds the natural height
             if (textarea.scrollHeight > textarea.clientHeight) {
                 textarea.style.height = textarea.scrollHeight + 'px';
+            }
+        }
+
+        function toggleClearBtn(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById('clear-' + inputId);
+            if (btn) {
+                btn.style.display = input.value.trim() ? 'flex' : 'none';
+            }
+        }
+
+        function clearInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                input.style.height = '';
+                input.focus();
+                toggleClearBtn(inputId);
             }
         }
 
