@@ -366,8 +366,16 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // --- Google Cloud TTS Endpoint ---
+    // --- Google Cloud TTS Endpoint (JWT protected) ---
     if (req.method === 'POST' && url.pathname === '/api/tts') {
+        // Require authentication to prevent API abuse
+        const ttsUser = getAuthenticatedUser(req);
+        if (!ttsUser) {
+            res.writeHead(401);
+            res.end(JSON.stringify({ error: 'Unauthorized' }));
+            return;
+        }
+
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {

@@ -1233,7 +1233,10 @@
                 // Try Google Cloud TTS first
                 const res = await fetch('/api/tts', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
                     body: JSON.stringify({ text })
                 });
 
