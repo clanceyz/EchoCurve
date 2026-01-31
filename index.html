@@ -646,19 +646,23 @@
 
     <!-- Public Preview Modal Overlay -->
     <div id="public-preview-modal" onmousedown="modalMouseDownTarget = event.target"
-        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) { stopPlayingAll(); this.style.display='none'; }"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1100; align-items: center; justify-content: center;">
         <div class="modal-card"
             style="width: 500px; max-height: 70vh; display: flex; flex-direction: column; padding: 25px; text-align: left;">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px;">
                 <h3 id="preview-title" style="margin: 0; color: var(--accent);">Dialog Preview</h3>
-                <button onclick="document.getElementById('public-preview-modal').style.display='none'"
+                <button onclick="stopPlayingAll(); document.getElementById('public-preview-modal').style.display='none'"
                     style="background:none; border:none; font-size: 1.5em; color: #666; cursor: pointer;">✕</button>
             </div>
             <div id="preview-sentences-list" style="overflow-y: auto; flex-grow: 1; font-size: 0.95em; color: #ccc;">
             </div>
-            <div style="margin-top: 20px; text-align: right;">
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-play" id="btn-play-all-preview"
+                    style="background: #333; border: 1px solid #444; border-radius: 20px; padding: 8px 20px; display: flex; align-items: center; gap: 8px;">
+                    ▶️ Play All
+                </button>
                 <button class="btn-add" id="btn-add-from-preview">Add to My Library</button>
             </div>
         </div>
@@ -1020,17 +1024,24 @@
                 return;
             }
 
-            listEl.innerHTML = dialogs.map(d => `
-                <div class="public-dialog-item">
-                    <div onclick="openPublicPreview(${d.id})" style="cursor: pointer; flex-grow: 1;">
-                        <div style="font-weight: bold; font-size: 1.1em; color: var(--accent);">${d.title}</div>
-                        <div style="font-size: 0.85em; color: #888;">${d.sentences.length} sentences (Click to preview)</div>
+            listEl.innerHTML = dialogs.map(d => {
+                const alreadyExists = sentences.some(s => s.dialogTitle === d.title);
+                return `
+                    <div class="public-dialog-item">
+                        <div onclick="openPublicPreview(${d.id})" style="cursor: pointer; flex-grow: 1;">
+                            <div style="font-weight: bold; font-size: 1.1em; color: var(--accent);">${d.title}</div>
+                            <div style="font-size: 0.85em; color: #888;">${d.sentences.length} sentences (Click to preview)</div>
+                        </div>
+                        ${alreadyExists ? `
+                            <span style="color: var(--success); font-size: 0.9em; padding: 10px;">✅ Added</span>
+                        ` : `
+                            <button class="btn-add-public" onclick="addPublicDialogToMyLibrary(${d.id})">
+                                + Add to My Library
+                            </button>
+                        `}
                     </div>
-                    <button class="btn-add-public" onclick="addPublicDialogToMyLibrary(${d.id})">
-                        + Add to My Library
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             // Store fetched dialogs globally for easy adding
             window.latestPublicDialogs = dialogs;
@@ -1039,38 +1050,139 @@
         function openPublicPreview(dialogId) {
             const dialog = window.latestPublicDialogs.find(d => d.id === dialogId);
             if (!dialog) return;
+            openDialogPreview(dialog, true);
+        }
 
+        function openPersonalPreview(title) {
+            // Filter your own sentences to find this dialog
+            const dialogSentences = sentences.filter(s => s.dialogTitle === title);
+            if (dialogSentences.length === 0) return;
+
+            // Create a temporary dialog object for the preview
+            const dialog = {
+                id: 'personal-' + title,
+                title: title,
+                sentences: dialogSentences
+            };
+            openDialogPreview(dialog, false);
+        }
+
+        function openDialogPreview(dialog, isPublic) {
             document.getElementById('preview-title').textContent = `Preview: ${dialog.title}`;
             const listEl = document.getElementById('preview-sentences-list');
             listEl.innerHTML = dialog.sentences.map((s, idx) => `
-                <div style="margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #333;">
-                    <span style="color: var(--accent); font-weight: bold; margin-right: 5px;">${idx + 1}.</span>
-                    ${s.text}
+                <div id="preview-item-${idx}" class="preview-sentence-item" 
+                    style="margin-bottom: 10px; padding: 10px; border-radius: 8px; border: 1px solid #333; display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
+                    <button class="btn-play" onclick="stopPlayingAll(); speak('${s.text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                        style="padding: 5px; font-size: 1.1em; background: #333; border: 1px solid #444; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        ▶️
+                    </button>
+                    <div style="flex-grow: 1;">
+                        <span style="color: var(--accent); font-weight: bold; margin-right: 5px;">${idx + 1}.</span>
+                        ${s.text}
+                    </div>
                 </div>
             `).join('');
 
             const addBtn = document.getElementById('btn-add-from-preview');
-            addBtn.onclick = () => {
-                document.getElementById('public-preview-modal').style.display = 'none';
-                addPublicDialogToMyLibrary(dialogId);
-            };
+            const alreadyExists = sentences.some(s => s.dialogTitle === dialog.title);
+
+            if (isPublic && !alreadyExists) {
+                addBtn.style.display = 'block';
+                addBtn.textContent = 'Add to My Library';
+                addBtn.onclick = () => {
+                    stopPlayingAll();
+                    document.getElementById('public-preview-modal').style.display = 'none';
+                    addPublicDialogToMyLibrary(dialog.id);
+                };
+            } else {
+                addBtn.style.display = 'none'; // Already in library
+            }
+
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            playAllBtn.onclick = () => playAllPreviewFromData(dialog);
+
+            // Ensure we stop any playing audio when opening new preview
+            stopPlayingAll();
 
             document.getElementById('public-preview-modal').style.display = 'flex';
+        }
+
+        let isPlayingAll = false;
+        async function playAllPreviewFromData(dialog) {
+            if (isPlayingAll) {
+                stopPlayingAll();
+                return;
+            }
+
+            isPlayingAll = true;
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            playAllBtn.innerHTML = '⏹️ Stop Playing';
+            playAllBtn.style.color = 'var(--danger)';
+
+            for (let i = 0; i < dialog.sentences.length; i++) {
+                if (!isPlayingAll) break;
+
+                const s = dialog.sentences[i];
+                const itemEl = document.getElementById(`preview-item-${i}`);
+
+                // Clear previous highlights
+                document.querySelectorAll('.preview-sentence-item').forEach(el => {
+                    el.style.background = '';
+                    el.style.borderColor = '#333';
+                });
+
+                if (itemEl) {
+                    itemEl.style.background = 'rgba(0, 173, 181, 0.15)';
+                    itemEl.style.borderColor = 'var(--accent)';
+                    itemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                await speak(s.text);
+
+                if (isPlayingAll) {
+                    await new Promise(r => setTimeout(r, 600)); // Gap between sentences
+                }
+            }
+
+            stopPlayingAll();
+        }
+        function stopPlayingAll() {
+            isPlayingAll = false;
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            if (playAllBtn) {
+                playAllBtn.innerHTML = '▶️ Play All';
+                playAllBtn.style.color = '';
+            }
+            // Clear all highlights
+            document.querySelectorAll('.preview-sentence-item').forEach(el => {
+                el.style.background = '';
+                el.style.borderColor = '#333';
+            });
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            synth.cancel();
         }
 
         async function addPublicDialogToMyLibrary(dialogId) {
             const dialog = window.latestPublicDialogs.find(d => d.id === dialogId);
             if (!dialog) return;
 
-            const confirmed = await showDialog(`Add "${dialog.title}" to your library?`);
-            if (!confirmed) return;
+            // Prevent duplicate adding
+            const alreadyExists = sentences.some(s => s.dialogTitle === dialog.title);
+            if (alreadyExists) {
+                await showDialog(`ℹ️ "${dialog.title}" is already in your library.`);
+                return;
+            }
 
             // Map public sentences to user format, tagging them with dialog title
-            const newSentences = dialog.sentences.map(s => ({
-                id: Date.now() + Math.random(),
+            const newSentences = dialog.sentences.map((s, idx) => ({
+                id: Date.now() + idx,
                 text: s.text,
-                nextReview: Date.now() + (0.5 * 24 * 60 * 60 * 1000),
-                interval: 0.5,
+                nextReview: Date.now(),
+                interval: 0,
                 stage: 0,
                 dialogTitle: dialog.title
             }));
@@ -1079,6 +1191,10 @@
             sentences = [...newSentences, ...sentences];
             await save();
             render();
+            // Re-render public library list to show "Added" status
+            if (window.latestPublicDialogs) {
+                renderPublicLibrary(window.latestPublicDialogs);
+            }
             logStatus(`✅ Added "${dialog.title}" to your library!`);
         }
 
@@ -1251,7 +1367,7 @@
             const item = currentReviewItem;
 
             if (success) {
-                const intervals = [0.02, 0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90]; // 0.02 = ~30 min
+                const intervals = [0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90]; // First stage is 12 hours after initial review
                 item.stage = Math.min(item.stage + 1, intervals.length);
                 item.interval = intervals[item.stage - 1] || (item.interval * 2);
             } else {
@@ -1344,98 +1460,95 @@
             const libList = document.getElementById('library-list');
             if (libList) {
                 libList.innerHTML = '';
-
-                // Group sentences by dialog
-                const groups = {};
-                const ungrouped = [];
+                const renderedDialogTitles = new Set();
 
                 sentences.forEach(s => {
                     if (s.dialogTitle) {
-                        if (!groups[s.dialogTitle]) groups[s.dialogTitle] = [];
-                        groups[s.dialogTitle].push(s);
+                        // Only render a dialog card once for the entire group
+                        if (renderedDialogTitles.has(s.dialogTitle)) return;
+                        renderedDialogTitles.add(s.dialogTitle);
+
+                        const totalCount = sentences.filter(item => item.dialogTitle === s.dialogTitle).length;
+                        const div = document.createElement('div');
+                        div.className = 'sentence-card';
+                        div.style.borderLeft = '4px solid var(--accent)';
+
+                        const cardTop = document.createElement('div');
+                        cardTop.className = 'card-top';
+
+                        const titleWrapper = document.createElement('div');
+                        titleWrapper.style.cssText = 'flex-grow: 1; cursor: pointer; display: flex; align-items: center; gap: 10px;';
+                        titleWrapper.onclick = () => openPersonalPreview(s.dialogTitle);
+
+                        const folderIcon = document.createElement('span');
+                        folderIcon.textContent = '📚';
+
+                        const titleSpan = document.createElement('span');
+                        titleSpan.style.cssText = 'color: var(--accent); font-weight: bold; margin: 0; font-size: 18px; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.2s;';
+                        titleSpan.textContent = s.dialogTitle;
+                        // Hover effect
+                        titleWrapper.onmouseover = () => { titleSpan.style.textDecorationColor = 'var(--accent)'; };
+                        titleWrapper.onmouseout = () => { titleSpan.style.textDecorationColor = 'transparent'; };
+
+                        const countSpan = document.createElement('span');
+                        countSpan.style.cssText = 'font-size: 0.8em; color: #666; font-weight: normal;';
+                        countSpan.textContent = `(${totalCount})`;
+
+                        titleWrapper.appendChild(folderIcon);
+                        titleWrapper.appendChild(titleSpan);
+                        titleWrapper.appendChild(countSpan);
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-del';
+                        delBtn.textContent = '🗑️';
+                        delBtn.onclick = () => deleteDialog(s.dialogTitle);
+
+                        cardTop.appendChild(titleWrapper);
+                        cardTop.appendChild(delBtn);
+                        div.appendChild(cardTop);
+                        libList.appendChild(div);
                     } else {
-                        ungrouped.push(s);
+                        // Render Individual Sentence Card
+                        const div = document.createElement('div');
+                        div.className = 'sentence-card';
+
+                        const cardTop = document.createElement('div');
+                        cardTop.className = 'card-top';
+
+                        const playBtn = document.createElement('button');
+                        playBtn.className = 'btn-play';
+                        playBtn.tabIndex = -1;
+                        playBtn.textContent = '▶️';
+                        playBtn.onclick = () => speak(s.text);
+
+                        const textSpan = document.createElement('span');
+                        textSpan.className = 'text-content';
+                        textSpan.textContent = s.text;
+                        textSpan.onclick = () => editSentence(s.id);
+
+                        const btnGroup = document.createElement('div');
+                        btnGroup.style.display = 'flex';
+
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'btn-del';
+                        editBtn.style.cssText = 'color:var(--warning); margin-right:5px;';
+                        editBtn.textContent = '✏️';
+                        editBtn.onclick = () => editSentence(s.id);
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-del';
+                        delBtn.textContent = '🗑️';
+                        delBtn.onclick = () => deleteSentence(s.id);
+
+                        btnGroup.appendChild(editBtn);
+                        btnGroup.appendChild(delBtn);
+                        cardTop.appendChild(playBtn);
+                        cardTop.appendChild(textSpan);
+                        cardTop.appendChild(btnGroup);
+                        div.appendChild(cardTop);
+                        libList.appendChild(div);
                     }
                 });
-
-                const renderSentence = (s) => {
-                    const div = document.createElement('div');
-                    div.className = 'sentence-card';
-                    const now = Date.now();
-                    const isDue = s.nextReview <= now;
-                    const nextDate = new Date(s.nextReview).toLocaleDateString();
-                    const statusColor = isDue ? 'var(--danger)' : '#888';
-
-                    const cardTop = document.createElement('div');
-                    cardTop.className = 'card-top';
-
-                    const playBtn = document.createElement('button');
-                    playBtn.className = 'btn-play';
-                    playBtn.tabIndex = -1;
-                    playBtn.textContent = '▶️';
-                    playBtn.onclick = () => speak(s.text);
-
-                    const textSpan = document.createElement('span');
-                    textSpan.className = 'text-content';
-                    textSpan.textContent = s.text;
-                    textSpan.onclick = () => editSentence(s.id);
-
-                    const btnGroup = document.createElement('div');
-
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'btn-del';
-                    editBtn.style.cssText = 'color:var(--warning); margin-right:5px;';
-                    editBtn.tabIndex = -1;
-                    editBtn.textContent = '✏️';
-                    editBtn.onclick = () => editSentence(s.id);
-
-                    const delBtn = document.createElement('button');
-                    delBtn.className = 'btn-del';
-                    delBtn.tabIndex = -1;
-                    delBtn.textContent = '🗑️';
-                    delBtn.onclick = () => deleteSentence(s.id);
-
-                    btnGroup.appendChild(editBtn);
-                    btnGroup.appendChild(delBtn);
-                    cardTop.appendChild(playBtn);
-                    cardTop.appendChild(textSpan);
-                    cardTop.appendChild(btnGroup);
-
-                    const metaDiv = document.createElement('div');
-                    metaDiv.className = 'meta-info';
-                    metaDiv.style.cssText = `color:${statusColor}; margin-left: 45px;`;
-                    metaDiv.innerHTML = isDue ? '<b>DUE NOW</b>' : 'Next: ' + nextDate;
-                    metaDiv.innerHTML += ` (Interval: ${s.interval}d)`;
-
-                    div.appendChild(cardTop);
-                    div.appendChild(metaDiv);
-                    return div;
-                };
-
-                // Render dialog groups
-                Object.keys(groups).forEach(title => {
-                    const groupHeader = document.createElement('div');
-                    groupHeader.className = 'dialog-group-header';
-                    groupHeader.innerHTML = `
-                        <span class="dialog-title">${title} (${groups[title].length})</span>
-                        <button class="btn-del" onclick="deleteDialog('${title}')" style="font-size: 0.8em;">🗑️ Delete Dialog</button>
-                    `;
-                    libList.appendChild(groupHeader);
-
-                    groups[title].forEach(s => libList.appendChild(renderSentence(s)));
-                });
-
-                // Render ungrouped sentences
-                if (ungrouped.length > 0) {
-                    if (Object.keys(groups).length > 0) {
-                        const otherHeader = document.createElement('div');
-                        otherHeader.className = 'dialog-group-header';
-                        otherHeader.style.borderLeftColor = '#666';
-                        otherHeader.innerHTML = '<span class="dialog-title" style="color: #888;">Misc Sentences</span>';
-                        libList.appendChild(otherHeader);
-                    }
-                    ungrouped.forEach(s => libList.appendChild(renderSentence(s)));
-                }
 
                 if (sentences.length === 0) {
                     libList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 50px;">Library is empty.</p>';
@@ -1450,8 +1563,8 @@
                 sentences.unshift({
                     id: Date.now(),
                     text: text,
-                    nextReview: Date.now() + (0.5 * 24 * 60 * 60 * 1000),
-                    interval: 0.5,
+                    nextReview: Date.now(),
+                    interval: 0,
                     stage: 0
                 });
 
@@ -1473,7 +1586,8 @@
             const confirmed = await showDialog('Delete this sentence?');
             if (confirmed) {
                 sentences = sentences.filter(s => s.id !== id);
-                save();
+                await save();
+                render();
             }
         }
 
@@ -1483,7 +1597,8 @@
             const newText = await showDialog('Edit sentence:', item.text);
             if (newText && newText !== item.text) {
                 item.text = newText;
-                save();
+                await save();
+                render();
             }
         }
 
@@ -1491,56 +1606,68 @@
         let currentAudio = null;
 
         async function speak(text) {
-            // Stop any currently playing audio
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            synth.cancel();
-
-            try {
-                // Try Google Cloud TTS first
-                const res = await fetch('/api/tts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentToken}`
-                    },
-                    body: JSON.stringify({ text })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.audioContent) {
-                        // Play the audio from base64
-                        currentAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-                        currentAudio.play();
-                        return;
-                    }
+            return new Promise(async (resolve) => {
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
                 }
-            } catch (err) {
-                console.log('Google TTS unavailable, using browser TTS:', err.message);
-            }
+                synth.cancel();
 
-            // Fallback to browser TTS
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.95;
-            utterance.pitch = 1.0;
+                const onEnded = () => {
+                    resolve();
+                };
 
-            const voices = synth.getVoices();
-            const preferredVoices = ['Google US English', 'Microsoft Zira', 'Microsoft David', 'Samantha', 'Alex', 'Daniel'];
-            let selectedVoice = voices.find(v => preferredVoices.some(p => v.name.includes(p)));
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Neural')));
-            }
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => v.lang.startsWith('en'));
-            }
-            if (selectedVoice) {
-                utterance.voice = selectedVoice;
-            }
-            synth.speak(utterance);
+                try {
+                    // Try Google Cloud TTS first
+                    const res = await fetch('/api/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${currentToken}`
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.audioContent) {
+                            // Play the audio from base64
+                            currentAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+                            currentAudio.onended = onEnded;
+                            currentAudio.play().catch(e => {
+                                console.error("Audio play error:", e);
+                                onEnded();
+                            });
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.log('Google TTS unavailable, using browser TTS:', err.message);
+                }
+
+                // Fallback to browser TTS
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.95;
+                utterance.pitch = 1.0;
+                utterance.onend = onEnded;
+                utterance.onerror = onEnded;
+
+                const voices = synth.getVoices();
+                const preferredVoices = ['Google US English', 'Microsoft Zira', 'Microsoft David', 'Samantha', 'Alex', 'Daniel'];
+                let selectedVoice = voices.find(v => preferredVoices.some(p => v.name.includes(p)));
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Neural')));
+                }
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => v.lang.startsWith('en'));
+                }
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                synth.speak(utterance);
+            });
         }
 
         // Pre-load voices (some browsers need this)
@@ -1631,6 +1758,8 @@
                 `;
             });
             resEl.innerHTML = html;
+            // Scroll results into view
+            resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function addDictionarySentence(text, btn) {
@@ -1696,13 +1825,13 @@
                 // Merge imported data with existing (avoid duplicates by text)
                 const existingTexts = new Set(sentences.map(s => s.text));
                 let addedCount = 0;
-                importedData.forEach(item => {
+                importedData.forEach((item, idx) => {
                     if (!existingTexts.has(item.text)) {
                         sentences.push({
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + idx,
                             text: item.text,
                             nextReview: item.nextReview || Date.now(),
-                            interval: item.interval || 0.5,
+                            interval: item.interval || 0,
                             stage: item.stage || 0
                         });
                         addedCount++;

@@ -12,12 +12,21 @@ const userStore = require('./users');
 const publicStore = require('./public_library');
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-const JWT_EXPIRY_DAYS = 30;
+const SECRET_PATH = path.join(userStore.DATA_DIR, 'secret.key');
+let JWT_SECRET = process.env.JWT_SECRET;
 
-if (!process.env.JWT_SECRET) {
-    console.log('[Security] JWT_SECRET not set, using random secret (tokens will invalidate on restart)');
+if (!JWT_SECRET) {
+    if (fs.existsSync(SECRET_PATH)) {
+        JWT_SECRET = fs.readFileSync(SECRET_PATH, 'utf8');
+    } else {
+        JWT_SECRET = crypto.randomBytes(32).toString('hex');
+        fs.writeFileSync(SECRET_PATH, JWT_SECRET, 'utf8');
+    }
+} else {
+    console.log('[Security] Using JWT_SECRET from environment');
 }
+
+const JWT_EXPIRY_DAYS = 30;
 
 // JWT Utilities (no external dependencies)
 function base64UrlEncode(data) {

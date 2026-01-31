@@ -13,7 +13,7 @@ function getDataDir() {
     } catch (e) {
         // /data not accessible (Windows or no persistent disk)
     }
-    
+
     // Fall back to local data directory
     const localPath = path.join(__dirname, 'data');
     console.log(`[Storage] Using local storage at ${localPath}`);
@@ -60,4 +60,5 @@ const userStore = {
     }
 };
 
+userStore.DATA_DIR = DATA_DIR;
 module.exports = userStore;
