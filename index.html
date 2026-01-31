@@ -893,6 +893,7 @@
                     currentToken = result.token;
                     localStorage.setItem('echocurve_user', username);
                     localStorage.setItem('echocurve_token', result.token);
+                    updateUserRole();
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('username-display').textContent = '👤 ' + username;
@@ -936,6 +937,7 @@
                     currentToken = result.token;
                     localStorage.setItem('echocurve_user', username);
                     localStorage.setItem('echocurve_token', result.token);
+                    updateUserRole();
                     saveKnownUsername(username);
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('username-display').textContent = '👤 ' + username;
@@ -1739,6 +1741,7 @@
 
         window.onload = () => {
             updateUserDatalist();
+            updateUserRole();
             loadData();
 
             // Focus management - keep cursor on input boxes

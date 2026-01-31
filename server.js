@@ -9,6 +9,7 @@ const {
     verifyAuthenticationResponse,
 } = require('@simplewebauthn/server');
 const userStore = require('./users');
+const publicStore = require('./public_library');
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
@@ -431,8 +432,6 @@ const server = http.createServer(async (req, res) => {
         });
         return;
     }
-
-    // ... (JWT logic remains same)
 
     // --- Public Library Endpoints ---
 
