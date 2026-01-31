@@ -1739,6 +1739,17 @@
             }
         }
 
+        function isAnyModalOpen() {
+            const modals = [
+                'auth-overlay', 'dialog-modal', 'review-modal',
+                'library-modal', 'public-library-modal', 'admin-import-modal'
+            ];
+            return modals.some(id => {
+                const el = document.getElementById(id);
+                return el && (el.style.display === 'flex' || el.style.display === 'block');
+            });
+        }
+
         window.onload = () => {
             updateUserDatalist();
             updateUserRole();
@@ -1769,13 +1780,8 @@
                 input.addEventListener('blur', () => {
                     setTimeout(() => {
                         const active = document.activeElement;
-                        const authVisible = document.getElementById('auth-overlay').style.display !== 'none';
-                        const dialogVisible = document.getElementById('dialog-modal').style.display === 'flex';
-                        const reviewVisible = document.getElementById('review-modal').style.display === 'flex';
-                        const libraryVisible = document.getElementById('library-modal').style.display === 'flex';
-
                         // Only refocus if no modal is open and focus left the inputs
-                        if (!authVisible && !dialogVisible && !reviewVisible && !libraryVisible) {
+                        if (!isAnyModalOpen()) {
                             if (!inputs.includes(active)) {
                                 input.focus();
                             }
