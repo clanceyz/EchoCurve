@@ -986,7 +986,8 @@
 
         function startReviewSession() {
             const now = Date.now();
-            const dueItems = sentences.filter(s => s.nextReview <= now);
+            // Sort by id (oldest first) so dialogs are reviewed in order
+            const dueItems = sentences.filter(s => s.nextReview <= now).sort((a, b) => a.id - b.id);
             reviewSessionTotal = dueItems.length;
             reviewSessionCompleted = 0;
 
@@ -1032,7 +1033,10 @@
             reviewSessionCompleted++;
 
             const now = Date.now();
-            const nextItem = sentences.find(s => s.nextReview <= now && s.id !== item.id);
+            // Get next oldest due item
+            const nextItem = sentences
+                .filter(s => s.nextReview <= now && s.id !== item.id)
+                .sort((a, b) => a.id - b.id)[0];
             if (nextItem) {
                 setTimeout(() => startReview(nextItem), 300);
             } else {
