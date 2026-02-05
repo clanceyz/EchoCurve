@@ -716,8 +716,8 @@
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <button class="btn-forgot" onclick="finishReview(false)">Again ❌</button>
-                <button class="btn-remember" onclick="finishReview(true)">Good ✅</button>
+                <button class="btn-forgot" onclick="goBackReview()">Back</button>
+                <button class="btn-remember" onclick="finishReview(true)">Good</button>
             </div>
         </div>
     </div>
@@ -1330,6 +1330,7 @@
 
         let reviewSessionTotal = 0;
         let reviewSessionCompleted = 0;
+        let reviewHistory = [];
 
         function startReviewSession() {
             const now = Date.now();
@@ -1337,6 +1338,7 @@
             const dueItems = sentences.filter(s => s.nextReview <= now).sort((a, b) => a.id - b.id);
             reviewSessionTotal = dueItems.length;
             reviewSessionCompleted = 0;
+            reviewHistory = [];
 
             if (dueItems.length > 0) {
                 startReview(dueItems[0]);
@@ -1353,6 +1355,12 @@
             textEl.textContent = item.text;
             textEl.className = 'masked';
 
+            // Calculate current total due items (including those already completed in this session if we go back)
+            // But for progress display, we want the live count of what's still due + what we've done.
+            const now = Date.now();
+            const stillDue = sentences.filter(s => s.nextReview <= now && s.id !== (currentReviewItem ? currentReviewItem.id : null)).length;
+            reviewSessionTotal = reviewSessionCompleted + 1 + stillDue;
+
             // Update progress display
             const progressEl = document.getElementById('review-progress');
             if (progressEl && reviewSessionTotal > 0) {
@@ -1365,6 +1373,16 @@
         function finishReview(success) {
             if (!currentReviewItem) return;
             const item = currentReviewItem;
+
+            // Save to history before modifying
+            reviewHistory.push({
+                item: item,
+                state: {
+                    stage: item.stage,
+                    interval: item.interval,
+                    nextReview: item.nextReview
+                }
+            });
 
             if (success) {
                 const intervals = [0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90]; // First stage is 12 hours after initial review
@@ -1391,6 +1409,24 @@
                 currentReviewItem = null;
                 updateDashboard();
             }
+        }
+
+        async function goBackReview() {
+            if (reviewHistory.length === 0) return;
+
+            const lastEntry = reviewHistory.pop();
+            const item = lastEntry.item;
+            const state = lastEntry.state;
+
+            // Restore state
+            item.stage = state.stage;
+            item.interval = state.interval;
+            item.nextReview = state.nextReview;
+
+            reviewSessionCompleted = Math.max(0, reviewSessionCompleted - 1);
+
+            await save();
+            startReview(item);
         }
 
         function openLibraryModal() { document.getElementById('library-modal').style.display = 'flex'; }
@@ -1434,16 +1470,16 @@
             const reviewModal = document.getElementById('review-modal');
             if (reviewModal.style.display !== 'flex') return;
 
-            // Prevent space from triggering focused buttons
+            // Space = Toggle Text Cover
             if (e.key === ' ' || e.code === 'Space') {
                 e.preventDefault();
-                replayCurrentReview(); // Space = Replay
+                toggleModalReveal();
                 return;
             }
 
             if (e.key.toLowerCase() === 'a') {
                 e.preventDefault();
-                finishReview(false); // Again
+                goBackReview(); // Back to previous
             } else if (e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 replayCurrentReview(); // Replay
