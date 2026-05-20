@@ -689,6 +689,11 @@
     <div id="review-modal" onmousedown="modalMouseDownTarget = event.target"
         onmouseup="if(event.target === this && modalMouseDownTarget === this) closeReviewModal()">
         <div class="modal-card" style="position: relative;">
+            <button onclick="goBackReview()"
+                style="position: absolute; top: 10px; left: 10px; background: #333; border: 1px solid #444; border-radius: 6px; padding: 4px 10px; font-size: 0.8em; color: #888; cursor: pointer;"
+                title="Go back to previous review (A)">
+                ← Back (A)
+            </button>
             <button onclick="closeReviewModal()"
                 style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5em; color: #666; padding: 5px;">✕</button>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -706,18 +711,24 @@
                 <button class="btn-play"
                     style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333;"
                     onclick="replayCurrentReview()">
-                    🔊 Replay Audio
+                    🔊 Repeat (S)
                 </button>
                 <button class="btn-play"
                     style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333; margin-left: 10px;"
                     onclick="editCurrentReview()">
-                    ✏️ Edit
+                    ✏️ Edit (E)
+                </button>
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333; margin-left: 10px;"
+                    onclick="markCurrentAsLearnt()"
+                    title="Mark as learnt — won't appear in reviews again (L)">
+                    🎓 Learnt (L)
                 </button>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <button class="btn-forgot" onclick="goBackReview()">Back</button>
-                <button class="btn-remember" onclick="finishReview(true)">Good</button>
+                <button class="btn-forgot" onclick="finishReview(false)">Again (X)</button>
+                <button class="btn-remember" onclick="finishReview(true)">Good (D)</button>
             </div>
         </div>
     </div>
@@ -1303,7 +1314,7 @@
 
         function updateDashboard() {
             const now = Date.now();
-            const dueCount = sentences.filter(s => s.nextReview <= now).length;
+            const dueCount = sentences.filter(s => !s.learnt && s.nextReview <= now).length;
             const btn = document.getElementById('btn-start-review');
             if (btn) btn.style.display = 'flex';
 
@@ -1328,20 +1339,19 @@
             if (totalCountEl) totalCountEl.textContent = sentences.length;
         }
 
-        let reviewSessionTotal = 0;
-        let reviewSessionCompleted = 0;
+        let reviewQueue = [];
+        let sessionIndex = 0;
         let reviewHistory = [];
 
         function startReviewSession() {
             const now = Date.now();
             // Sort by id (oldest first) so dialogs are reviewed in order
-            const dueItems = sentences.filter(s => s.nextReview <= now).sort((a, b) => a.id - b.id);
-            reviewSessionTotal = dueItems.length;
-            reviewSessionCompleted = 0;
+            reviewQueue = sentences.filter(s => !s.learnt && s.nextReview <= now).sort((a, b) => a.id - b.id);
+            sessionIndex = 0;
             reviewHistory = [];
 
-            if (dueItems.length > 0) {
-                startReview(dueItems[0]);
+            if (reviewQueue.length > 0) {
+                startReview(reviewQueue[0]);
             } else {
                 updateDashboard();
             }
@@ -1355,16 +1365,17 @@
             textEl.textContent = item.text;
             textEl.className = 'masked';
 
-            // Calculate current total due items (including those already completed in this session if we go back)
-            // But for progress display, we want the live count of what's still due + what we've done.
+            // Check for any new items that became due and append them to the end of the queue
             const now = Date.now();
-            const stillDue = sentences.filter(s => s.nextReview <= now && s.id !== (currentReviewItem ? currentReviewItem.id : null)).length;
-            reviewSessionTotal = reviewSessionCompleted + 1 + stillDue;
+            const newDue = sentences.filter(s => !s.learnt && s.nextReview <= now && !reviewQueue.find(q => q.id === s.id));
+            if (newDue.length > 0) {
+                reviewQueue = [...reviewQueue, ...newDue.sort((a, b) => a.id - b.id)];
+            }
 
             // Update progress display
             const progressEl = document.getElementById('review-progress');
-            if (progressEl && reviewSessionTotal > 0) {
-                progressEl.textContent = `${reviewSessionCompleted + 1} of ${reviewSessionTotal}`;
+            if (progressEl && reviewQueue.length > 0) {
+                progressEl.textContent = `${sessionIndex + 1} of ${reviewQueue.length}`;
             }
 
             speak(item.text);
@@ -1374,7 +1385,7 @@
             if (!currentReviewItem) return;
             const item = currentReviewItem;
 
-            // Save to history before modifying
+            // Save to history before modifying for "Go Back" restoration
             reviewHistory.push({
                 item: item,
                 state: {
@@ -1395,15 +1406,10 @@
             item.nextReview = Date.now() + (item.interval * 24 * 60 * 60 * 1000);
 
             save();
-            reviewSessionCompleted++;
+            sessionIndex++;
 
-            const now = Date.now();
-            // Get next oldest due item
-            const nextItem = sentences
-                .filter(s => s.nextReview <= now && s.id !== item.id)
-                .sort((a, b) => a.id - b.id)[0];
-            if (nextItem) {
-                setTimeout(() => startReview(nextItem), 300);
+            if (sessionIndex < reviewQueue.length) {
+                setTimeout(() => startReview(reviewQueue[sessionIndex]), 300);
             } else {
                 document.getElementById('review-modal').style.display = 'none';
                 currentReviewItem = null;
@@ -1412,7 +1418,7 @@
         }
 
         async function goBackReview() {
-            if (reviewHistory.length === 0) return;
+            if (sessionIndex === 0 || reviewHistory.length === 0) return;
 
             const lastEntry = reviewHistory.pop();
             const item = lastEntry.item;
@@ -1422,8 +1428,13 @@
             item.stage = state.stage;
             item.interval = state.interval;
             item.nextReview = state.nextReview;
+            if (state.learnt === undefined) {
+                delete item.learnt;
+            } else {
+                item.learnt = state.learnt;
+            }
 
-            reviewSessionCompleted = Math.max(0, reviewSessionCompleted - 1);
+            sessionIndex--;
 
             await save();
             startReview(item);
@@ -1441,6 +1452,35 @@
                 currentReviewItem.text = newText;
                 document.getElementById('modal-text-content').textContent = newText;
                 save();
+            }
+        }
+
+        async function markCurrentAsLearnt() {
+            if (!currentReviewItem) return;
+            const item = currentReviewItem;
+
+            reviewHistory.push({
+                item: item,
+                state: {
+                    stage: item.stage,
+                    interval: item.interval,
+                    nextReview: item.nextReview,
+                    learnt: item.learnt
+                }
+            });
+
+            item.learnt = true;
+            item.nextReview = Number.MAX_SAFE_INTEGER;
+
+            await save();
+            sessionIndex++;
+
+            if (sessionIndex < reviewQueue.length) {
+                setTimeout(() => startReview(reviewQueue[sessionIndex]), 300);
+            } else {
+                document.getElementById('review-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
             }
         }
 
@@ -1480,6 +1520,9 @@
             if (e.key.toLowerCase() === 'a') {
                 e.preventDefault();
                 goBackReview(); // Back to previous
+            } else if (e.key.toLowerCase() === 'x') {
+                e.preventDefault();
+                finishReview(false); // Again
             } else if (e.key.toLowerCase() === 's') {
                 e.preventDefault();
                 replayCurrentReview(); // Replay
@@ -1489,6 +1532,9 @@
             } else if (e.key.toLowerCase() === 'e') {
                 e.preventDefault();
                 editCurrentReview(); // Edit
+            } else if (e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                markCurrentAsLearnt(); // Mark as Learnt
             }
         });
 
