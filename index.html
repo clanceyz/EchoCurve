@@ -1304,12 +1304,9 @@
         }
 
         async function deleteDialog(title) {
-            const confirmed = await showDialog(`Delete all sentences in "${title}"?`);
-            if (confirmed) {
-                sentences = sentences.filter(s => s.dialogTitle !== title);
-                await save();
-                render();
-            }
+            sentences = sentences.filter(s => s.dialogTitle !== title);
+            await save();
+            render();
         }
 
         function updateDashboard() {
@@ -1665,12 +1662,9 @@
         function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
 
         async function deleteSentence(id) {
-            const confirmed = await showDialog('Delete this sentence?');
-            if (confirmed) {
-                sentences = sentences.filter(s => s.id !== id);
-                await save();
-                render();
-            }
+            sentences = sentences.filter(s => s.id !== id);
+            await save();
+            render();
         }
 
         async function editSentence(id) {
