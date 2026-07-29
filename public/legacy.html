@@ -1275,11 +1275,6 @@
                 logStatus('✅ Connected');
                 render();
 
-                // Onboarding flow for new users
-                if (sentences.length === 0) {
-                    const explore = await showDialog('Your library is empty. Would you like to explore the Public Library for some shared dialogs?');
-                    if (explore) openPublicLibraryModal();
-                }
             } catch (err) {
                 console.error('Failed to load:', err);
                 logStatus('⚠️ Offline mode');
@@ -1674,12 +1669,9 @@
         function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
 
         async function deleteSentence(id) {
-            const confirmed = await showDialog('Delete this sentence?');
-            if (confirmed) {
-                sentences = sentences.filter(s => s.id !== id);
-                await save();
-                render();
-            }
+            sentences = sentences.filter(s => s.id !== id);
+            await save();
+            render();
         }
 
         async function editSentence(id) {

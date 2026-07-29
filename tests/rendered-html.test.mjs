@@ -13,6 +13,8 @@ test("Sites serves the restored EchoCurve interface", async () => {
   assert.match(legacy, /EchoCurve - SRS Practice/);
   assert.match(legacy, /Mark as learnt/);
   assert.match(legacy, /Sites user/);
+  assert.doesNotMatch(legacy, /Your library is empty/);
+  assert.doesNotMatch(legacy, /Delete this sentence\?/);
   assert.match(worker, /CREATE TABLE IF NOT EXISTS user_data/);
   assert.match(worker, /oai-authenticated-user-email/);
 });
