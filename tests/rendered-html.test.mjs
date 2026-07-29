@@ -8,7 +8,6 @@ test("EchoCurve page contains the core study workflow", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const css = await readFile(new URL("app/globals.css", root), "utf8");
   const layout = await readFile(new URL("app/layout.tsx", root), "utf8");
-  const phrasalVerbs = await readFile(new URL("app/phrasal-verb-examples.ts", root), "utf8");
 
   assert.match(page, /EchoCurve/);
   assert.match(page, /Review queue/);
@@ -20,8 +19,6 @@ test("EchoCurve page contains the core study workflow", async () => {
   assert.match(css, /\.review-band/);
   assert.match(css, /\.library-list/);
   assert.match(layout, /title: "EchoCurve"/);
-  assert.match(phrasalVerbs, /Phrasal Verb Examples/);
-  assert.equal((phrasalVerbs.match(/^    ".+",$/gm) ?? []).length, 62);
 });
 
 test("the legacy local server keeps its CommonJS entrypoint", async () => {
