@@ -781,11 +781,6 @@
         Initializing...
     </div>
 
-    <div id="app-version"
-        style="position: fixed; bottom: 10px; left: 10px; z-index: 2100; font-size: 0.75em; color: #666;">
-        v202607281632
-    </div>
-
     <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
     <script>
         const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
@@ -1309,9 +1304,12 @@
         }
 
         async function deleteDialog(title) {
-            sentences = sentences.filter(s => s.dialogTitle !== title);
-            await save();
-            render();
+            const confirmed = await showDialog(`Delete all sentences in "${title}"?`);
+            if (confirmed) {
+                sentences = sentences.filter(s => s.dialogTitle !== title);
+                await save();
+                render();
+            }
         }
 
         function updateDashboard() {
@@ -1667,9 +1665,12 @@
         function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
 
         async function deleteSentence(id) {
-            sentences = sentences.filter(s => s.id !== id);
-            await save();
-            render();
+            const confirmed = await showDialog('Delete this sentence?');
+            if (confirmed) {
+                sentences = sentences.filter(s => s.id !== id);
+                await save();
+                render();
+            }
         }
 
         async function editSentence(id) {
