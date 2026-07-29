@@ -15,6 +15,8 @@ test("Sites serves the restored EchoCurve interface", async () => {
   assert.match(legacy, /Sites user/);
   assert.doesNotMatch(legacy, /Your library is empty/);
   assert.doesNotMatch(legacy, /Delete this sentence\?/);
+  assert.match(legacy, /dialogTitle: item\.dialogTitle/);
+  assert.match(legacy, /existing\.dialogTitle = item\.dialogTitle/);
   assert.match(worker, /CREATE TABLE IF NOT EXISTS user_data/);
   assert.match(worker, /oai-authenticated-user-email/);
 });

@@ -1897,22 +1897,29 @@
                 if (!confirmed) return;
 
                 // Merge imported data with existing (avoid duplicates by text)
-                const existingTexts = new Set(sentences.map(s => s.text));
+                const existingByText = new Map(sentences.map(s => [s.text, s]));
                 let addedCount = 0;
                 importedData.forEach((item, idx) => {
-                    if (!existingTexts.has(item.text)) {
+                    const existing = existingByText.get(item.text);
+                    if (existing) {
+                        if (item.dialogTitle && !existing.dialogTitle) {
+                            existing.dialogTitle = item.dialogTitle;
+                        }
+                    } else {
                         sentences.push({
                             id: Date.now() + idx,
                             text: item.text,
                             nextReview: item.nextReview || Date.now(),
                             interval: item.interval || 0,
-                            stage: item.stage || 0
+                            stage: item.stage || 0,
+                            dialogTitle: item.dialogTitle
                         });
                         addedCount++;
                     }
                 });
 
                 await save();
+                render();
                 logStatus(`📥 Imported ${addedCount} new sentences!`);
             } catch (err) {
                 logStatus('❌ Import failed: Invalid file format');
