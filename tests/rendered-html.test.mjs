@@ -17,8 +17,14 @@ test("Sites serves the restored EchoCurve interface", async () => {
   assert.doesNotMatch(legacy, /Delete this sentence\?/);
   assert.match(legacy, /dialogTitle: item\.dialogTitle/);
   assert.match(legacy, /existing\.dialogTitle = item\.dialogTitle/);
+  assert.match(legacy, /indexedDB\.open\(AUDIO_DB_NAME/);
+  assert.match(legacy, /await cacheAudio\(text, blob\)/);
+  assert.match(legacy, /await loadNaturalSpeech\(text\)/);
   assert.match(worker, /CREATE TABLE IF NOT EXISTS user_data/);
   assert.match(worker, /oai-authenticated-user-email/);
+  assert.match(worker, /https:\/\/api\.openai\.com\/v1\/audio\/speech/);
+  assert.match(worker, /model: "gpt-4o-mini-tts"/);
+  assert.match(worker, /voice: "marin"/);
 });
 
 test("the original local server remains available", async () => {

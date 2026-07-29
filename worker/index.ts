@@ -5,6 +5,7 @@ import handler from "vinext/server/app-router-entry";
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  OPENAI_API_KEY?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -63,6 +64,53 @@ async function handleDataApi(request: Request, env: Env): Promise<Response> {
   return new Response("Method not allowed", { status: 405 });
 }
 
+async function handleTtsApi(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (!env.OPENAI_API_KEY) return Response.json({ error: "TTS is not configured" }, { status: 503 });
+
+  let text = "";
+  try {
+    const body = (await request.json()) as { text?: unknown };
+    if (typeof body.text !== "string") throw new Error("Invalid text");
+    text = body.text.trim();
+  } catch {
+    return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  if (!text || text.length > 4096) {
+    return Response.json({ error: "Text must contain 1 to 4096 characters" }, { status: 400 });
+  }
+
+  const response = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini-tts",
+      voice: "marin",
+      input: text,
+      instructions:
+        "Speak in warm, natural, conversational American English. Use clear pronunciation, gentle pacing, and natural intonation for a language learner.",
+      response_format: "mp3",
+      speed: 0.95,
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    console.error("[TTS] OpenAI request failed", response.status);
+    return Response.json({ error: "Speech generation failed" }, { status: 502 });
+  }
+
+  return new Response(response.body, {
+    headers: {
+      "content-type": "audio/mpeg",
+      "cache-control": "no-store",
+    },
+  });
+}
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -79,9 +127,7 @@ const worker = {
       return env.ASSETS.fetch(new Request(new URL("/public_library.json", request.url)));
     }
 
-    if (url.pathname === "/api/tts") {
-      return Response.json({ error: "Browser speech synthesis is used on Sites" }, { status: 503 });
-    }
+    if (url.pathname === "/api/tts") return handleTtsApi(request, env);
 
     if (url.pathname.startsWith("/api/auth/")) {
       return Response.json({ error: "Sites access provides authentication" }, { status: 410 });

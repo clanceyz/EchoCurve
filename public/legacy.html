@@ -1669,7 +1669,9 @@
         function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
 
         async function deleteSentence(id) {
+            const item = sentences.find(s => s.id === id);
             sentences = sentences.filter(s => s.id !== id);
+            if (item) deleteCachedAudio(item.text);
             await save();
             render();
         }
@@ -1679,57 +1681,159 @@
             if (!item) return;
             const newText = await showDialog('Edit sentence:', item.text);
             if (newText && newText !== item.text) {
+                const oldText = item.text;
                 item.text = newText;
                 await save();
+                deleteCachedAudio(oldText);
+                prefetchSpeech(newText);
                 render();
             }
         }
 
-        // Audio player for Google Cloud TTS
+        // Natural speech is cached as MP3 blobs in IndexedDB for future playback.
+        const AUDIO_DB_NAME = 'echocurve-audio';
+        const AUDIO_STORE_NAME = 'speech';
+        const audioFetches = new Map();
+        let audioDbPromise = null;
         let currentAudio = null;
+        let currentAudioUrl = null;
+
+        function openAudioDb() {
+            if (audioDbPromise) return audioDbPromise;
+            audioDbPromise = new Promise((resolve, reject) => {
+                const request = indexedDB.open(AUDIO_DB_NAME, 1);
+                request.onupgradeneeded = () => {
+                    if (!request.result.objectStoreNames.contains(AUDIO_STORE_NAME)) {
+                        request.result.createObjectStore(AUDIO_STORE_NAME);
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            return audioDbPromise;
+        }
+
+        async function getCachedAudio(text) {
+            const db = await openAudioDb();
+            return new Promise((resolve, reject) => {
+                const request = db.transaction(AUDIO_STORE_NAME, 'readonly')
+                    .objectStore(AUDIO_STORE_NAME)
+                    .get(text);
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function cacheAudio(text, blob) {
+            const db = await openAudioDb();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(AUDIO_STORE_NAME, 'readwrite');
+                transaction.objectStore(AUDIO_STORE_NAME).put(blob, text);
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => reject(transaction.error);
+            });
+        }
+
+        async function deleteCachedAudio(text) {
+            try {
+                const db = await openAudioDb();
+                const transaction = db.transaction(AUDIO_STORE_NAME, 'readwrite');
+                transaction.objectStore(AUDIO_STORE_NAME).delete(text);
+            } catch (err) {
+                console.log('Could not remove cached speech:', err.message);
+            }
+        }
+
+        async function fetchSpeechAudio(text) {
+            if (audioFetches.has(text)) return audioFetches.get(text);
+
+            const request = (async () => {
+                const res = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ text })
+                });
+                if (!res.ok) throw new Error(`Speech service returned ${res.status}`);
+
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await res.json();
+                    if (!data.audioContent) throw new Error('Speech response contained no audio');
+                    const bytes = Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0));
+                    return new Blob([bytes], { type: 'audio/mpeg' });
+                }
+                return res.blob();
+            })();
+
+            audioFetches.set(text, request);
+            try {
+                return await request;
+            } finally {
+                audioFetches.delete(text);
+            }
+        }
+
+        async function loadNaturalSpeech(text) {
+            try {
+                const cached = await getCachedAudio(text);
+                if (cached) return cached;
+            } catch (err) {
+                console.log('Speech cache unavailable:', err.message);
+            }
+
+            const blob = await fetchSpeechAudio(text);
+            try {
+                await cacheAudio(text, blob);
+            } catch (err) {
+                console.log('Could not cache speech:', err.message);
+            }
+            return blob;
+        }
+
+        async function prefetchSpeech(text) {
+            try {
+                await loadNaturalSpeech(text);
+            } catch (err) {
+                console.log('Natural speech unavailable:', err.message);
+            }
+        }
 
         async function speak(text) {
             return new Promise(async (resolve) => {
-                // Stop any currently playing audio
                 if (currentAudio) {
                     currentAudio.pause();
                     currentAudio = null;
                 }
+                if (currentAudioUrl) {
+                    URL.revokeObjectURL(currentAudioUrl);
+                    currentAudioUrl = null;
+                }
                 synth.cancel();
 
                 const onEnded = () => {
+                    if (currentAudioUrl) {
+                        URL.revokeObjectURL(currentAudioUrl);
+                        currentAudioUrl = null;
+                    }
+                    currentAudio = null;
                     resolve();
                 };
 
                 try {
-                    // Try Google Cloud TTS first
-                    const res = await fetch('/api/tts', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${currentToken}`
-                        },
-                        body: JSON.stringify({ text })
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.audioContent) {
-                            // Play the audio from base64
-                            currentAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-                            currentAudio.onended = onEnded;
-                            currentAudio.play().catch(e => {
-                                console.error("Audio play error:", e);
-                                onEnded();
-                            });
-                            return;
-                        }
-                    }
+                    const blob = await loadNaturalSpeech(text);
+                    currentAudioUrl = URL.createObjectURL(blob);
+                    currentAudio = new Audio(currentAudioUrl);
+                    currentAudio.onended = onEnded;
+                    currentAudio.onerror = onEnded;
+                    await currentAudio.play();
+                    return;
                 } catch (err) {
-                    console.log('Google TTS unavailable, using browser TTS:', err.message);
+                    console.log('Natural speech unavailable, using browser TTS:', err.message);
                 }
 
-                // Fallback to browser TTS
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.95;
