@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoCurve - SRS Practice</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --text: #e0e0e0;
+            --accent: #00ADB5;
+            --card-bg: #2d2d2d;
+            --input-bg: #333;
+            --danger: #ff6b6b;
+            --success: #4cd137;
+            --warning: #fbc531;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Sidebar Elements */
+        .menu-btn {
+            background: #333;
+            border: 1px solid #444;
+            padding: 15px;
+            font-size: 1.1em;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-btn:hover {
+            background: #444;
+            border-color: var(--accent);
+        }
+
+        .menu-btn.primary {
+            background: var(--accent);
+            border: none;
+            color: white;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .badge {
+            background: var(--accent);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+
+        .status-text {
+            font-size: 0.9em;
+            color: #888;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        /* Inputs */
+        .controls {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0;
+        }
+
+        input[type="text"],
+        textarea {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: none;
+            overflow-y: hidden;
+            min-height: 1.4em;
+            line-height: 1.4;
+            height: auto;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            background: #444;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-add {
+            background-color: var(--accent);
+        }
+
+        .btn-play {
+            background-color: transparent;
+            color: var(--success);
+            font-size: 1.2em;
+            padding: 5px;
+        }
+
+        .btn-del {
+            background-color: transparent;
+            color: var(--danger);
+            font-size: 1.2em;
+            padding: 5px;
+        }
+
+        .btn-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #555;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            line-height: 1;
+            color: #ccc;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-clear:hover {
+            background: #777;
+            color: #fff;
+        }
+
+        /* Dictionary */
+        .dict-results {
+            background: #222;
+            padding: 20px;
+            border-left: 4px solid var(--accent);
+            animation: fadeIn 0.3s;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .dict-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .dict-word {
+            font-size: 1.8em;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .dict-phonetic {
+            font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif;
+            color: #888;
+        }
+
+        .btn-audio {
+            background: none;
+            border: 1px solid #444;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-audio:hover {
+            background: #333;
+        }
+
+        .meaning-block {
+            margin-bottom: 15px;
+        }
+
+        .pos-tag {
+            background: #444;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+
+        .def-list {
+            margin: 5px 0 0 20px;
+            padding: 0;
+            color: #ccc;
+            font-size: 0.95em;
+        }
+
+        .def-list li {
+            margin-bottom: 4px;
+        }
+
+        .section-header {
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #1a1a1a;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .example-text {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .btn-small-add {
+            background: var(--success);
+            font-size: 0.8em;
+            padding: 5px 10px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modals & Cards */
+        .card {
+            background: var(--card-bg);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .text-content {
+            flex-grow: 1;
+            margin: 0 15px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .meta-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            background: #252525;
+            border-radius: 8px;
+        }
+
+        #review-modal,
+        #library-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            width: 500px;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            background: #222;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .masked {
+            background-color: #555;
+            color: transparent;
+            border-radius: 4px;
+        }
+
+        .btn-forgot {
+            background-color: var(--danger);
+            padding: 15px;
+            font-size: 1.2em;
+            width: 100%;
+        }
+
+        .btn-remember {
+            background-color: var(--success);
+            padding: 15px;
+            font-size: 1.2em;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .app-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+                box-sizing: border-box;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px;
+                border-bottom: 2px solid var(--accent);
+            }
+
+            .sidebar>div:first-child {
+                width: 100%;
+                margin-bottom: 5px !important;
+            }
+
+            .menu-btn {
+                flex: 1;
+                padding: 10px;
+                font-size: 0.9em;
+                min-width: 140px;
+            }
+
+            .menu-btn.primary {
+                width: 100%;
+                order: 3;
+            }
+
+            hr {
+                display: none;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .controls {
+                padding: 15px;
+                flex-wrap: wrap;
+            }
+
+            .controls input[type="text"],
+            .controls textarea {
+                width: 100%;
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+
+            .controls>div {
+                width: 100%;
+            }
+
+            .controls button.btn-add {
+                width: 100%;
+            }
+
+            /* Shorter placeholders on mobile */
+            #newSentence::placeholder {
+                font-size: 13px;
+            }
+
+            #wordInput::placeholder {
+                font-size: 13px;
+            }
+
+            .modal-card {
+                width: 95% !important;
+                padding: 20px !important;
+            }
+
+            #modal-text {
+                font-size: 1.5em !important;
+            }
+
+            .btn-forgot,
+            .btn-remember {
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .text-content {
+                font-size: 16px;
+                margin: 0 10px;
+            }
+
+            .card-top {
+                align-items: flex-start;
+            }
+
+            .meta-info {
+                margin-left: 35px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+
+    <div class="app-container">
+
+        <div class="sidebar">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h1 style="font-size: 1.5em; margin: 0; color: var(--accent);">EchoCurve</h1>
+                    <div id="username-display" style="font-size: 0.85em; color: #888; margin-top: 4px;"></div>
+                </div>
+                <div id="settings-menu" style="position: relative;">
+                    <button onclick="toggleSettingsDropdown()"
+                        style="background: #333; border: 1px solid #444; border-radius: 6px; padding: 6px 8px; font-size: 1em; cursor: pointer; color: #888;">
+                        ⚙️
+                    </button>
+                    <div id="settings-dropdown"
+                        style="display: none; position: absolute; top: 35px; right: 0; background: #2d2d2d; border: 1px solid #444; border-radius: 8px; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 100;">
+                        <button onclick="exportData()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #e0e0e0; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            📤 Export Data
+                        </button>
+                        <button onclick="importData()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #e0e0e0; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            📥 Import Data
+                        </button>
+                        <div style="border-top: 1px solid #444; margin: 4px 0;"></div>
+                        <button onclick="logout()"
+                            style="width: 100%; padding: 12px 16px; background: none; border: none; color: #ff6b6b; text-align: left; cursor: pointer; font-size: 1em;"
+                            onmouseover="this.style.background='#3a3a3a'" onmouseout="this.style.background='none'">
+                            🚪 Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="menu-btn" onclick="openLibraryModal()">
+                <span>📚 Library</span>
+                <span id="total-count" class="badge">0</span>
+            </button>
+
+            <button class="menu-btn" onclick="openPublicLibraryModal()">
+                <span>🌐 Public Library</span>
+            </button>
+
+            <button id="admin-import-btn" class="menu-btn" onclick="openAdminImportModal()"
+                style="display: none; border-color: var(--warning);">
+                <span>🛠️ Admin Import</span>
+            </button>
+
+            <hr style="width: 100%; border: 0; border-top: 1px solid #444; margin: 0;">
+
+            <button id="btn-start-review" class="menu-btn primary" style="display: none;"
+                onclick="startReviewSession()">
+                🚀 Start Review
+            </button>
+        </div>
+
+        <!-- Main Content (Inputs) -->
+        <div class="main-content">
+            <!-- 1. Sentence Input -->
+            <div class="controls" style="border-radius: 10px 10px 0 0; margin-bottom: 10px;">
+                <span style="font-size: 1.2em; margin-right: 10px;">✍️</span>
+                <div style="position: relative; flex-grow: 1; display: flex;">
+                    <textarea id="newSentence" tabindex="2" rows="1" spellcheck="true"
+                        placeholder="Add a new sentence..." onkeypress="handleEnter(event)"
+                        oninput="autoResize(this); toggleClearBtn('newSentence')"></textarea>
+                    <button id="clear-newSentence" class="btn-clear" onclick="clearInput('newSentence')"
+                        style="display: none;">×</button>
+                </div>
+                <button class="btn-add" tabindex="-1" onclick="addSentence()">Add</button>
+            </div>
+
+            <!-- 2. Word Lookup -->
+            <div class="controls" style="border-radius: 0 0 10px 10px;">
+                <span style="font-size: 1.2em; margin-right: 10px;">🔍</span>
+                <div style="position: relative; flex-grow: 1; display: flex;">
+                    <textarea id="wordInput" tabindex="1" rows="1" spellcheck="true" placeholder="Search for a word..."
+                        onkeypress="handleWordEnter(event)"
+                        oninput="autoResize(this); toggleClearBtn('wordInput')"></textarea>
+                    <button id="clear-wordInput" class="btn-clear" onclick="clearInput('wordInput')"
+                        style="display: none;">×</button>
+                </div>
+                <button class="btn-add" tabindex="-1" onclick="lookupWord()">Search</button>
+            </div>
+
+            <!-- 3. Dictionary Results -->
+            <div id="dict-results" class="dict-results" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <!-- Public Library Modal Overlay -->
+    <div id="public-library-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-card"
+            style="width: 600px; max-height: 80vh; display: flex; flex-direction: column; padding: 25px; text-align: left;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: var(--accent);">🌐 Public Library</h2>
+                <button onclick="document.getElementById('public-library-modal').style.display='none'"
+                    style="background:none; border:none; font-size: 1.5em; color: #666; cursor: pointer;">✕</button>
+            </div>
+            <div id="public-library-list" style="overflow-y: auto; flex-grow: 1;">
+                <p style="color: #888; text-align: center;">Loading shared dialogs...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Import Modal Overlay -->
+    <div id="admin-import-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 500px; padding: 25px; text-align: left;">
+            <h2 style="margin: 0 0 20px 0; color: var(--warning);">🛠️ Admin Import</h2>
+            <p style="color: #888; margin-bottom: 15px;">Create a new public dialog by pasting multiple lines.</p>
+            <input type="text" id="admin-import-title" placeholder="Dialog Title (e.g., Greetings)"
+                style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
+            <textarea id="admin-import-text" placeholder="Sentence 1&#10;Sentence 2&#10;Sentence 3..."
+                style="width: 100%; height: 200px; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="menu-btn" style="text-align: center; padding: 12px;"
+                    onclick="document.getElementById('admin-import-modal').style.display='none'">Cancel</button>
+                <button class="btn-add" onclick="submitAdminImport()" style="background: var(--warning);">Import
+                    Public</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Preview Modal Overlay -->
+    <div id="public-preview-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) { stopPlayingAll(); this.style.display='none'; }"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1100; align-items: center; justify-content: center;">
+        <div class="modal-card"
+            style="width: 500px; max-height: 70vh; display: flex; flex-direction: column; padding: 25px; text-align: left;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px;">
+                <h3 id="preview-title" style="margin: 0; color: var(--accent);">Dialog Preview</h3>
+                <button onclick="stopPlayingAll(); document.getElementById('public-preview-modal').style.display='none'"
+                    style="background:none; border:none; font-size: 1.5em; color: #666; cursor: pointer;">✕</button>
+            </div>
+            <div id="preview-sentences-list" style="overflow-y: auto; flex-grow: 1; font-size: 0.95em; color: #ccc;">
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-play" id="btn-play-all-preview"
+                    style="background: #333; border: 1px solid #444; border-radius: 20px; padding: 8px 20px; display: flex; align-items: center; gap: 8px;">
+                    ▶️ Play All
+                </button>
+                <button class="btn-add" id="btn-add-from-preview">Add to My Library</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Library Modal Overlay -->
+    <div id="library-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) this.style.display='none'"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 900; align-items: center; justify-content: center;">
+        <div class="modal-card"
+            style="width: 800px; height: 80vh; display: flex; flex-direction: column; padding: 20px; text-align: left;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">
+                <h2 style="margin: 0; color: var(--accent);">📚 Library</h2>
+                <button onclick="document.getElementById('library-modal').style.display='none'"
+                    style="background:none; border:none; font-size: 1.5em; color: #666;">✕</button>
+            </div>
+
+            <div id="library-list" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- Review Modal Overlay -->
+    <div id="review-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) closeReviewModal()">
+        <div class="modal-card" style="position: relative;">
+            <button onclick="goBackReview()"
+                style="position: absolute; top: 10px; left: 10px; background: #333; border: 1px solid #444; border-radius: 6px; padding: 4px 10px; font-size: 0.8em; color: #888; cursor: pointer;"
+                title="Go back to previous review (A)">
+                ← Back (A)
+            </button>
+            <button onclick="closeReviewModal()"
+                style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5em; color: #666; padding: 5px;">✕</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="color: #888; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">
+                    Review Time</div>
+                <div id="review-progress" style="color: var(--accent); font-size: 0.9em;"></div>
+            </div>
+
+            <div id="modal-text" style="font-size: 2em; margin-bottom: 20px; cursor: pointer;"
+                onclick="toggleModalReveal()">
+                <span id="modal-text-content" class="masked">Loading...</span>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333;"
+                    onclick="replayCurrentReview()">
+                    🔊 Repeat (S)
+                </button>
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333; margin-left: 10px;"
+                    onclick="editCurrentReview()">
+                    ✏️ Edit (E)
+                </button>
+                <button class="btn-play"
+                    style="font-size: 1.2em; padding: 10px 25px; border: 1px solid #444; border-radius: 30px; background: #333; margin-left: 10px;"
+                    onclick="markCurrentAsLearnt()"
+                    title="Mark as learnt — won't appear in reviews again (L)">
+                    🎓 Learnt (L)
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <button class="btn-forgot" onclick="finishReview(false)">Again (X)</button>
+                <button class="btn-remember" onclick="finishReview(true)">Good (D)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal -->
+    <div id="dialog-modal" onmousedown="modalMouseDownTarget = event.target"
+        onmouseup="if(event.target === this && modalMouseDownTarget === this) closeDialog(false)"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 400px; padding: 25px; text-align: center;">
+            <p id="dialog-message" style="margin-bottom: 20px; font-size: 1.1em;"></p>
+            <div id="dialog-input-container" style="margin-bottom: 20px; display: none;">
+                <input type="text" id="dialog-input" style="width: 100%; box-sizing: border-box; text-align: center;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="menu-btn" style="text-align: center; padding: 12px;"
+                    onclick="closeDialog(false)">Cancel</button>
+                <button class="btn-add" onclick="closeDialog(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; padding-top: 12vh; box-sizing: border-box;">
+        <h1 style="color: var(--accent); margin-bottom: 20px;">EchoCurve</h1>
+        <div class="modal-card" style="width: 350px; padding: 30px; text-align: center; border: 1px solid #444;">
+            <div id="auth-view-home">
+                <p>Welcome. Please enter your username.</p>
+                <div id="auth-error"
+                    style="display: none; color: #ff6b6b; background: rgba(255,100,100,0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
+                </div>
+                <input type="text" id="auth-username" placeholder="Username" list="user-list" autocomplete="on"
+                    style="width: 100%; margin-bottom: 20px; box-sizing: border-box; text-align: center;">
+                <datalist id="user-list"></datalist>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="btn-add" onclick="authLogin()">Login</button>
+                    <button class="menu-btn" style="text-align: center; padding: 10px;"
+                        onclick="authRegister()">Register</button>
+                </div>
+            </div>
+            <div id="auth-view-loading" style="display: none;">
+                <p id="auth-status">Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar"
+        style="position: fixed; bottom: 10px; right: 10px; background: #333; padding: 5px 10px; font-size: 0.8em; color: #888; border-radius: 5px; opacity: 0.7;">
+        Initializing...
+    </div>
+
+    <script>
+        // Sites already protects this app, so use its identity-backed API without a second login screen.
+        if (!localStorage.getItem('echocurve_user')) {
+            localStorage.setItem('echocurve_user', 'Sites user');
+        }
+        if (!localStorage.getItem('echocurve_token')) {
+            localStorage.setItem('echocurve_token', 'e30.eyJyb2xlIjoidXNlciJ9.x');
+        }
+    </script>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+    <script>
+        const { startRegistration, startAuthentication } = SimpleWebAuthnBrowser;
+        let sentences = [];
+        let currentUser = localStorage.getItem('echocurve_user');
+        let currentToken = localStorage.getItem('echocurve_token');
+        let userRole = 'user'; // Default role
+        const API_URL = '/api/data';
+        const synth = window.speechSynthesis;
+        let currentReviewItem = null;
+        let modalMouseDownTarget = null; // Track mouse events for modal close behavior
+
+        // Decode JWT to get user role
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updateUserRole() {
+            if (currentToken) {
+                const payload = parseJwt(currentToken);
+                if (payload) {
+                    userRole = payload.role || 'user';
+                    const adminBtn = document.getElementById('admin-import-btn');
+                    if (adminBtn) adminBtn.style.display = userRole === 'admin' ? 'flex' : 'none';
+                }
+            }
+        }
+
+
+        function logStatus(msg) {
+            const el = document.getElementById('status-bar');
+            if (el) { el.textContent = msg; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0.5, 3000); }
+        }
+
+        function showAuthStatus(msg) {
+            document.getElementById('auth-view-home').style.display = 'none';
+            document.getElementById('auth-view-loading').style.display = 'block';
+            document.getElementById('auth-status').textContent = msg;
+        }
+
+        function hideAuthStatus() {
+            document.getElementById('auth-view-home').style.display = 'block';
+            document.getElementById('auth-view-loading').style.display = 'none';
+        }
+
+        function showAuthError(msg) {
+            const errEl = document.getElementById('auth-error');
+            if (errEl) {
+                errEl.textContent = msg;
+                errEl.style.display = 'block';
+            }
+        }
+
+        function clearAuthError() {
+            const errEl = document.getElementById('auth-error');
+            if (errEl) {
+                errEl.style.display = 'none';
+                errEl.textContent = '';
+            }
+        }
+
+        // Custom dialog system (replaces browser confirm/prompt)
+        let dialogResolve = null;
+
+        function showDialog(message, defaultValue = null) {
+            return new Promise((resolve) => {
+                dialogResolve = resolve;
+                document.getElementById('dialog-message').textContent = message;
+                const inputContainer = document.getElementById('dialog-input-container');
+                const input = document.getElementById('dialog-input');
+
+                if (defaultValue !== null) {
+                    inputContainer.style.display = 'block';
+                    input.value = defaultValue;
+                    setTimeout(() => input.focus(), 50);
+                } else {
+                    inputContainer.style.display = 'none';
+                }
+
+                document.getElementById('dialog-modal').style.display = 'flex';
+            });
+        }
+
+        function closeDialog(confirmed) {
+            const modal = document.getElementById('dialog-modal');
+            modal.style.display = 'none';
+
+            if (dialogResolve) {
+                const inputContainer = document.getElementById('dialog-input-container');
+                if (inputContainer.style.display === 'block') {
+                    // Prompt mode - return input value or null
+                    dialogResolve(confirmed ? document.getElementById('dialog-input').value : null);
+                } else {
+                    // Confirm mode - return boolean
+                    dialogResolve(confirmed);
+                }
+                dialogResolve = null;
+            }
+        }
+
+        // Handle Enter key in dialog input
+        document.getElementById('dialog-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                closeDialog(true);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDialog(false);
+            }
+        });
+
+        async function authRegister() {
+            clearAuthError();
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            if (!username) return showAuthError('Username required');
+
+            showAuthStatus('Checking registration options...');
+            try {
+                const optionsRes = await fetch(`/api/auth/register-options?username=${username}`);
+                if (!optionsRes.ok) throw new Error('Registration not allowed');
+                const options = await optionsRes.json();
+
+                showAuthStatus('Waiting for authenticator...');
+                const attestation = await startRegistration(options);
+
+                showAuthStatus('Verifying registration...');
+                const verifyRes = await fetch('/api/auth/verify-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, registrationResponse: attestation })
+                });
+
+                const result = await verifyRes.json();
+                if (result.verified && result.token) {
+                    currentUser = username;
+                    currentToken = result.token;
+                    localStorage.setItem('echocurve_user', username);
+                    localStorage.setItem('echocurve_token', result.token);
+                    updateUserRole();
+                    saveKnownUsername(username);
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('username-display').textContent = '👤 ' + username;
+                    loadData();
+                } else {
+                    throw new Error(result.error || 'Verification failed');
+                }
+            } catch (err) {
+                showAuthError(`Register error: ${err.message}`);
+                hideAuthStatus();
+            }
+        }
+
+        async function authLogin() {
+            clearAuthError();
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            if (!username) return showAuthError('Username required');
+
+            showAuthStatus('Checking login options...');
+            try {
+                const optionsRes = await fetch(`/api/auth/login-options?username=${username}`);
+                if (!optionsRes.ok) {
+                    const errData = await optionsRes.json().catch(() => ({}));
+                    throw new Error(errData.error || 'User not found');
+                }
+                const options = await optionsRes.json();
+
+                showAuthStatus('Waiting for authenticator...');
+                const assertion = await startAuthentication(options);
+
+                showAuthStatus('Verifying login...');
+                const verifyRes = await fetch('/api/auth/verify-authentication', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, authenticationResponse: assertion })
+                });
+
+                const result = await verifyRes.json();
+                if (result.verified && result.token) {
+                    currentUser = username;
+                    currentToken = result.token;
+                    localStorage.setItem('echocurve_user', username);
+                    localStorage.setItem('echocurve_token', result.token);
+                    updateUserRole();
+                    saveKnownUsername(username);
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('username-display').textContent = '👤 ' + username;
+                    loadData();
+                } else {
+                    throw new Error(result.error || 'Verification failed');
+                }
+            } catch (err) {
+                showAuthError(`Login error: ${err.message}`);
+                hideAuthStatus();
+            }
+        }
+
+        if (currentUser && currentToken) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('auth-username').value = currentUser;
+            document.getElementById('username-display').textContent = '👤 ' + currentUser;
+        } else {
+            // Clear any partial state
+            currentUser = null;
+            currentToken = null;
+            localStorage.removeItem('echocurve_user');
+            localStorage.removeItem('echocurve_token');
+            // Pre-fill with last known username for convenience
+            const knownUsers = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            if (knownUsers.length > 0) {
+                document.getElementById('auth-username').value = knownUsers[knownUsers.length - 1];
+            }
+        }
+
+        async function logout() {
+            localStorage.removeItem('echocurve_user');
+            localStorage.removeItem('echocurve_token');
+            saveKnownUsername(currentUser);
+            location.reload();
+        }
+
+        // --- Public Library Functions ---
+
+        async function openPublicLibraryModal() {
+            const modal = document.getElementById('public-library-modal');
+            modal.style.display = 'flex';
+            const listEl = document.getElementById('public-library-list');
+            listEl.innerHTML = '<p style="text-align: center; color: #888;">Loading shared dialogs...</p>';
+
+            try {
+                const res = await fetch('/api/public-library');
+                if (!res.ok) throw new Error('Failed to fetch public library');
+                const dialogs = await res.json();
+                renderPublicLibrary(dialogs);
+            } catch (err) {
+                listEl.innerHTML = `<p style="text-align: center; color: var(--danger);">Error: ${err.message}</p>`;
+            }
+        }
+
+        function renderPublicLibrary(dialogs) {
+            const listEl = document.getElementById('public-library-list');
+            if (dialogs.length === 0) {
+                listEl.innerHTML = '<p style="text-align: center; color: #888;">No public dialogs available yet.</p>';
+                return;
+            }
+
+            listEl.innerHTML = dialogs.map(d => {
+                const alreadyExists = sentences.some(s => s.dialogTitle === d.title);
+                return `
+                    <div class="public-dialog-item">
+                        <div onclick="openPublicPreview(${d.id})" style="cursor: pointer; flex-grow: 1;">
+                            <div style="font-weight: bold; font-size: 1.1em; color: var(--accent);">${d.title}</div>
+                            <div style="font-size: 0.85em; color: #888;">${d.sentences.length} sentences (Click to preview)</div>
+                        </div>
+                        ${alreadyExists ? `
+                            <span style="color: var(--success); font-size: 0.9em; padding: 10px;">✅ Added</span>
+                        ` : `
+                            <button class="btn-add-public" onclick="addPublicDialogToMyLibrary(${d.id})">
+                                + Add to My Library
+                            </button>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            // Store fetched dialogs globally for easy adding
+            window.latestPublicDialogs = dialogs;
+        }
+
+        function openPublicPreview(dialogId) {
+            const dialog = window.latestPublicDialogs.find(d => d.id === dialogId);
+            if (!dialog) return;
+            openDialogPreview(dialog, true);
+        }
+
+        function openPersonalPreview(title) {
+            // Filter your own sentences to find this dialog
+            const dialogSentences = sentences.filter(s => s.dialogTitle === title);
+            if (dialogSentences.length === 0) return;
+
+            // Create a temporary dialog object for the preview
+            const dialog = {
+                id: 'personal-' + title,
+                title: title,
+                sentences: dialogSentences
+            };
+            openDialogPreview(dialog, false);
+        }
+
+        function openDialogPreview(dialog, isPublic) {
+            document.getElementById('preview-title').textContent = `Preview: ${dialog.title}`;
+            const listEl = document.getElementById('preview-sentences-list');
+            listEl.innerHTML = dialog.sentences.map((s, idx) => `
+                <div id="preview-item-${idx}" class="preview-sentence-item" 
+                    style="margin-bottom: 10px; padding: 10px; border-radius: 8px; border: 1px solid #333; display: flex; align-items: center; gap: 12px; transition: all 0.2s;">
+                    <button class="btn-play" onclick="stopPlayingAll(); speak('${s.text.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                        style="padding: 5px; font-size: 1.1em; background: #333; border: 1px solid #444; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        ▶️
+                    </button>
+                    <div style="flex-grow: 1;">
+                        <span style="color: var(--accent); font-weight: bold; margin-right: 5px;">${idx + 1}.</span>
+                        ${s.text}
+                    </div>
+                </div>
+            `).join('');
+
+            const addBtn = document.getElementById('btn-add-from-preview');
+            const alreadyExists = sentences.some(s => s.dialogTitle === dialog.title);
+
+            if (isPublic && !alreadyExists) {
+                addBtn.style.display = 'block';
+                addBtn.textContent = 'Add to My Library';
+                addBtn.onclick = () => {
+                    stopPlayingAll();
+                    document.getElementById('public-preview-modal').style.display = 'none';
+                    addPublicDialogToMyLibrary(dialog.id);
+                };
+            } else {
+                addBtn.style.display = 'none'; // Already in library
+            }
+
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            playAllBtn.onclick = () => playAllPreviewFromData(dialog);
+
+            // Ensure we stop any playing audio when opening new preview
+            stopPlayingAll();
+
+            document.getElementById('public-preview-modal').style.display = 'flex';
+        }
+
+        let isPlayingAll = false;
+        async function playAllPreviewFromData(dialog) {
+            if (isPlayingAll) {
+                stopPlayingAll();
+                return;
+            }
+
+            isPlayingAll = true;
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            playAllBtn.innerHTML = '⏹️ Stop Playing';
+            playAllBtn.style.color = 'var(--danger)';
+
+            for (let i = 0; i < dialog.sentences.length; i++) {
+                if (!isPlayingAll) break;
+
+                const s = dialog.sentences[i];
+                const itemEl = document.getElementById(`preview-item-${i}`);
+
+                // Clear previous highlights
+                document.querySelectorAll('.preview-sentence-item').forEach(el => {
+                    el.style.background = '';
+                    el.style.borderColor = '#333';
+                });
+
+                if (itemEl) {
+                    itemEl.style.background = 'rgba(0, 173, 181, 0.15)';
+                    itemEl.style.borderColor = 'var(--accent)';
+                    itemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                await speak(s.text);
+
+                if (isPlayingAll) {
+                    await new Promise(r => setTimeout(r, 600)); // Gap between sentences
+                }
+            }
+
+            stopPlayingAll();
+        }
+        function stopPlayingAll() {
+            isPlayingAll = false;
+            const playAllBtn = document.getElementById('btn-play-all-preview');
+            if (playAllBtn) {
+                playAllBtn.innerHTML = '▶️ Play All';
+                playAllBtn.style.color = '';
+            }
+            // Clear all highlights
+            document.querySelectorAll('.preview-sentence-item').forEach(el => {
+                el.style.background = '';
+                el.style.borderColor = '#333';
+            });
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            synth.cancel();
+        }
+
+        async function addPublicDialogToMyLibrary(dialogId) {
+            const dialog = window.latestPublicDialogs.find(d => d.id === dialogId);
+            if (!dialog) return;
+
+            // Prevent duplicate adding
+            const alreadyExists = sentences.some(s => s.dialogTitle === dialog.title);
+            if (alreadyExists) {
+                await showDialog(`ℹ️ "${dialog.title}" is already in your library.`);
+                return;
+            }
+
+            // Map public sentences to user format, tagging them with dialog title
+            const newSentences = dialog.sentences.map((s, idx) => ({
+                id: Date.now() + idx,
+                text: s.text,
+                nextReview: Date.now(),
+                interval: 0,
+                stage: 0,
+                dialogTitle: dialog.title
+            }));
+
+            // Add to front of library
+            sentences = [...newSentences, ...sentences];
+            await save();
+            render();
+            // Re-render public library list to show "Added" status
+            if (window.latestPublicDialogs) {
+                renderPublicLibrary(window.latestPublicDialogs);
+            }
+            logStatus(`✅ Added "${dialog.title}" to your library!`);
+        }
+
+        // --- Admin Import Functions ---
+
+        function openAdminImportModal() {
+            if (userRole !== 'admin') return;
+            document.getElementById('admin-import-modal').style.display = 'flex';
+            document.getElementById('admin-import-title').value = '';
+            document.getElementById('admin-import-text').value = '';
+            document.getElementById('admin-import-title').focus();
+        }
+
+        async function submitAdminImport() {
+            const title = document.getElementById('admin-import-title').value.trim();
+            const text = document.getElementById('admin-import-text').value.trim();
+
+            if (!title || !text) {
+                logStatus('❌ Title and text required');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/public-library/import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ title, text })
+                });
+
+                if (res.ok) {
+                    logStatus(`✅ Public dialog "${title}" imported!`);
+                    document.getElementById('admin-import-modal').style.display = 'none';
+                } else {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Import failed');
+                }
+            } catch (err) {
+                logStatus(`❌ Error: ${err.message}`);
+            }
+        }
+        async function loadData() {
+            if (!currentUser || !currentToken) return;
+            logStatus('Connecting to server...');
+            try {
+                const res = await fetch(`${API_URL}?t=${Date.now()}`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+                sentences = await res.json();
+                logStatus('✅ Connected');
+                render();
+
+                // Onboarding flow for new users
+                if (sentences.length === 0) {
+                    const explore = await showDialog('Your library is empty. Would you like to explore the Public Library for some shared dialogs?');
+                    if (explore) openPublicLibraryModal();
+                }
+            } catch (err) {
+                console.error('Failed to load:', err);
+                logStatus('⚠️ Offline mode');
+                sentences = [];
+                render();
+            }
+        }
+
+        async function save() {
+            if (!currentUser || !currentToken) return false;
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify(sentences)
+                });
+                if (res.status === 401) {
+                    logout();
+                    return false;
+                }
+                if (!res.ok) throw new Error('Save failed');
+                updateDashboard();
+                return true;
+            } catch (err) {
+                logStatus('❌ Save failed');
+                return false;
+            }
+        }
+
+        async function deleteDialog(title) {
+            const confirmed = await showDialog(`Delete all sentences in "${title}"?`);
+            if (confirmed) {
+                sentences = sentences.filter(s => s.dialogTitle !== title);
+                await save();
+                render();
+            }
+        }
+
+        function updateDashboard() {
+            const now = Date.now();
+            const dueCount = sentences.filter(s => !s.learnt && s.nextReview <= now).length;
+            const btn = document.getElementById('btn-start-review');
+            if (btn) btn.style.display = 'flex';
+
+            if (dueCount > 0) {
+                if (btn) {
+                    btn.textContent = `🚀 Start Review (${dueCount})`;
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.background = 'var(--accent)';
+                    btn.style.cursor = 'pointer';
+                }
+            } else {
+                if (btn) {
+                    btn.textContent = `✅ No Reviews`;
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.background = '#444';
+                    btn.style.cursor = 'default';
+                }
+            }
+            const totalCountEl = document.getElementById('total-count');
+            if (totalCountEl) totalCountEl.textContent = sentences.length;
+        }
+
+        let reviewQueue = [];
+        let sessionIndex = 0;
+        let reviewHistory = [];
+
+        function startReviewSession() {
+            const now = Date.now();
+            // Sort by id (oldest first) so dialogs are reviewed in order
+            reviewQueue = sentences.filter(s => !s.learnt && s.nextReview <= now).sort((a, b) => a.id - b.id);
+            sessionIndex = 0;
+            reviewHistory = [];
+
+            if (reviewQueue.length > 0) {
+                startReview(reviewQueue[0]);
+            } else {
+                updateDashboard();
+            }
+        }
+
+        function startReview(item) {
+            currentReviewItem = item;
+            const modal = document.getElementById('review-modal');
+            modal.style.display = 'flex';
+            const textEl = document.getElementById('modal-text-content');
+            textEl.textContent = item.text;
+            textEl.className = 'masked';
+
+            // Check for any new items that became due and append them to the end of the queue
+            const now = Date.now();
+            const newDue = sentences.filter(s => !s.learnt && s.nextReview <= now && !reviewQueue.find(q => q.id === s.id));
+            if (newDue.length > 0) {
+                reviewQueue = [...reviewQueue, ...newDue.sort((a, b) => a.id - b.id)];
+            }
+
+            // Update progress display
+            const progressEl = document.getElementById('review-progress');
+            if (progressEl && reviewQueue.length > 0) {
+                progressEl.textContent = `${sessionIndex + 1} of ${reviewQueue.length}`;
+            }
+
+            speak(item.text);
+        }
+
+        function finishReview(success) {
+            if (!currentReviewItem) return;
+            const item = currentReviewItem;
+
+            // Save to history before modifying for "Go Back" restoration
+            reviewHistory.push({
+                item: item,
+                state: {
+                    stage: item.stage,
+                    interval: item.interval,
+                    nextReview: item.nextReview
+                }
+            });
+
+            if (success) {
+                const intervals = [0.5, 1, 2, 3, 5, 8, 14, 21, 30, 45, 60, 90]; // First stage is 12 hours after initial review
+                item.stage = Math.min(item.stage + 1, intervals.length);
+                item.interval = intervals[item.stage - 1] || (item.interval * 2);
+            } else {
+                item.stage = 1;
+                item.interval = 0.5;
+            }
+            item.nextReview = Date.now() + (item.interval * 24 * 60 * 60 * 1000);
+
+            save();
+            sessionIndex++;
+
+            if (sessionIndex < reviewQueue.length) {
+                setTimeout(() => startReview(reviewQueue[sessionIndex]), 300);
+            } else {
+                document.getElementById('review-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
+            }
+        }
+
+        async function goBackReview() {
+            if (sessionIndex === 0 || reviewHistory.length === 0) return;
+
+            const lastEntry = reviewHistory.pop();
+            const item = lastEntry.item;
+            const state = lastEntry.state;
+
+            // Restore state
+            item.stage = state.stage;
+            item.interval = state.interval;
+            item.nextReview = state.nextReview;
+            if (state.learnt === undefined) {
+                delete item.learnt;
+            } else {
+                item.learnt = state.learnt;
+            }
+
+            sessionIndex--;
+
+            await save();
+            startReview(item);
+        }
+
+        function openLibraryModal() { document.getElementById('library-modal').style.display = 'flex'; }
+        function toggleModalReveal() { document.getElementById('modal-text-content').classList.toggle('masked'); }
+        function replayCurrentReview() { if (currentReviewItem) speak(currentReviewItem.text); }
+        function closeReviewModal() { document.getElementById('review-modal').style.display = 'none'; currentReviewItem = null; updateDashboard(); }
+
+        async function editCurrentReview() {
+            if (!currentReviewItem) return;
+            const newText = await showDialog('Edit sentence:', currentReviewItem.text);
+            if (newText && newText !== currentReviewItem.text) {
+                currentReviewItem.text = newText;
+                document.getElementById('modal-text-content').textContent = newText;
+                save();
+            }
+        }
+
+        async function markCurrentAsLearnt() {
+            if (!currentReviewItem) return;
+            const item = currentReviewItem;
+
+            reviewHistory.push({
+                item: item,
+                state: {
+                    stage: item.stage,
+                    interval: item.interval,
+                    nextReview: item.nextReview,
+                    learnt: item.learnt
+                }
+            });
+
+            item.learnt = true;
+            item.nextReview = Number.MAX_SAFE_INTEGER;
+
+            await save();
+            sessionIndex++;
+
+            if (sessionIndex < reviewQueue.length) {
+                setTimeout(() => startReview(reviewQueue[sessionIndex]), 300);
+            } else {
+                document.getElementById('review-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // ESC closes any open modal
+            if (e.key === 'Escape') {
+                // Close dialog first if open
+                if (document.getElementById('dialog-modal').style.display === 'flex') {
+                    closeDialog(false);
+                    return;
+                }
+                document.getElementById('review-modal').style.display = 'none';
+                document.getElementById('library-modal').style.display = 'none';
+                currentReviewItem = null;
+                updateDashboard();
+                return;
+            }
+
+            // Skip shortcuts when typing in input fields
+            const activeEl = document.activeElement;
+            if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                return;
+            }
+
+            // Review modal shortcuts
+            const reviewModal = document.getElementById('review-modal');
+            if (reviewModal.style.display !== 'flex') return;
+
+            // Space = Toggle Text Cover
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                toggleModalReveal();
+                return;
+            }
+
+            if (e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                goBackReview(); // Back to previous
+            } else if (e.key.toLowerCase() === 'x') {
+                e.preventDefault();
+                finishReview(false); // Again
+            } else if (e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                replayCurrentReview(); // Replay
+            } else if (e.key.toLowerCase() === 'd') {
+                e.preventDefault();
+                finishReview(true); // Good
+            } else if (e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                editCurrentReview(); // Edit
+            } else if (e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                markCurrentAsLearnt(); // Mark as Learnt
+            }
+        });
+
+        function render() {
+            const libList = document.getElementById('library-list');
+            if (libList) {
+                libList.innerHTML = '';
+                const renderedDialogTitles = new Set();
+
+                sentences.forEach(s => {
+                    if (s.dialogTitle) {
+                        // Only render a dialog card once for the entire group
+                        if (renderedDialogTitles.has(s.dialogTitle)) return;
+                        renderedDialogTitles.add(s.dialogTitle);
+
+                        const totalCount = sentences.filter(item => item.dialogTitle === s.dialogTitle).length;
+                        const div = document.createElement('div');
+                        div.className = 'sentence-card';
+                        div.style.borderLeft = '4px solid var(--accent)';
+
+                        const cardTop = document.createElement('div');
+                        cardTop.className = 'card-top';
+
+                        const titleWrapper = document.createElement('div');
+                        titleWrapper.style.cssText = 'flex-grow: 1; cursor: pointer; display: flex; align-items: center; gap: 10px;';
+                        titleWrapper.onclick = () => openPersonalPreview(s.dialogTitle);
+
+                        const folderIcon = document.createElement('span');
+                        folderIcon.textContent = '📚';
+
+                        const titleSpan = document.createElement('span');
+                        titleSpan.style.cssText = 'color: var(--accent); font-weight: bold; margin: 0; font-size: 18px; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color 0.2s;';
+                        titleSpan.textContent = s.dialogTitle;
+                        // Hover effect
+                        titleWrapper.onmouseover = () => { titleSpan.style.textDecorationColor = 'var(--accent)'; };
+                        titleWrapper.onmouseout = () => { titleSpan.style.textDecorationColor = 'transparent'; };
+
+                        const countSpan = document.createElement('span');
+                        countSpan.style.cssText = 'font-size: 0.8em; color: #666; font-weight: normal;';
+                        countSpan.textContent = `(${totalCount})`;
+
+                        titleWrapper.appendChild(folderIcon);
+                        titleWrapper.appendChild(titleSpan);
+                        titleWrapper.appendChild(countSpan);
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-del';
+                        delBtn.textContent = '🗑️';
+                        delBtn.onclick = () => deleteDialog(s.dialogTitle);
+
+                        cardTop.appendChild(titleWrapper);
+                        cardTop.appendChild(delBtn);
+                        div.appendChild(cardTop);
+                        libList.appendChild(div);
+                    } else {
+                        // Render Individual Sentence Card
+                        const div = document.createElement('div');
+                        div.className = 'sentence-card';
+
+                        const cardTop = document.createElement('div');
+                        cardTop.className = 'card-top';
+
+                        const playBtn = document.createElement('button');
+                        playBtn.className = 'btn-play';
+                        playBtn.tabIndex = -1;
+                        playBtn.textContent = '▶️';
+                        playBtn.onclick = () => speak(s.text);
+
+                        const textSpan = document.createElement('span');
+                        textSpan.className = 'text-content';
+                        textSpan.textContent = s.text;
+                        textSpan.onclick = () => editSentence(s.id);
+
+                        const btnGroup = document.createElement('div');
+                        btnGroup.style.display = 'flex';
+
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'btn-del';
+                        editBtn.style.cssText = 'color:var(--warning); margin-right:5px;';
+                        editBtn.textContent = '✏️';
+                        editBtn.onclick = () => editSentence(s.id);
+
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'btn-del';
+                        delBtn.textContent = '🗑️';
+                        delBtn.onclick = () => deleteSentence(s.id);
+
+                        btnGroup.appendChild(editBtn);
+                        btnGroup.appendChild(delBtn);
+                        cardTop.appendChild(playBtn);
+                        cardTop.appendChild(textSpan);
+                        cardTop.appendChild(btnGroup);
+                        div.appendChild(cardTop);
+                        libList.appendChild(div);
+                    }
+                });
+
+                if (sentences.length === 0) {
+                    libList.innerHTML = '<p style="text-align: center; color: #666; margin-top: 50px;">Library is empty.</p>';
+                }
+            }
+            updateDashboard();
+        }
+        async function addSentence() {
+            const input = document.getElementById('newSentence');
+            const text = input.value.trim();
+            if (text) {
+                sentences.unshift({
+                    id: Date.now(),
+                    text: text,
+                    nextReview: Date.now(),
+                    interval: 0,
+                    stage: 0
+                });
+
+                const success = await save();
+                if (success) {
+                    input.value = '';
+                    input.style.height = 'auto';
+                    speak(text);
+                } else {
+                    sentences.shift();
+                }
+                render();
+            }
+        }
+
+        function handleEnter(e) { if (e.key === 'Enter') { e.preventDefault(); addSentence(); } }
+
+        async function deleteSentence(id) {
+            const confirmed = await showDialog('Delete this sentence?');
+            if (confirmed) {
+                sentences = sentences.filter(s => s.id !== id);
+                await save();
+                render();
+            }
+        }
+
+        async function editSentence(id) {
+            const item = sentences.find(s => s.id === id);
+            if (!item) return;
+            const newText = await showDialog('Edit sentence:', item.text);
+            if (newText && newText !== item.text) {
+                item.text = newText;
+                await save();
+                render();
+            }
+        }
+
+        // Audio player for Google Cloud TTS
+        let currentAudio = null;
+
+        async function speak(text) {
+            return new Promise(async (resolve) => {
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+                synth.cancel();
+
+                const onEnded = () => {
+                    resolve();
+                };
+
+                try {
+                    // Try Google Cloud TTS first
+                    const res = await fetch('/api/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${currentToken}`
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.audioContent) {
+                            // Play the audio from base64
+                            currentAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+                            currentAudio.onended = onEnded;
+                            currentAudio.play().catch(e => {
+                                console.error("Audio play error:", e);
+                                onEnded();
+                            });
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.log('Google TTS unavailable, using browser TTS:', err.message);
+                }
+
+                // Fallback to browser TTS
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.95;
+                utterance.pitch = 1.0;
+                utterance.onend = onEnded;
+                utterance.onerror = onEnded;
+
+                const voices = synth.getVoices();
+                const preferredVoices = ['Google US English', 'Microsoft Zira', 'Microsoft David', 'Samantha', 'Alex', 'Daniel'];
+                let selectedVoice = voices.find(v => preferredVoices.some(p => v.name.includes(p)));
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Neural')));
+                }
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => v.lang.startsWith('en'));
+                }
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                synth.speak(utterance);
+            });
+        }
+
+        // Pre-load voices (some browsers need this)
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = () => synth.getVoices();
+        }
+
+        function handleWordEnter(e) { if (e.key === 'Enter') { e.preventDefault(); lookupWord(); } }
+
+        // Detect if text contains Chinese characters
+        function containsChinese(text) {
+            return /[\u4e00-\u9fff]/.test(text);
+        }
+
+        // Translate Chinese to English using MyMemory API
+        async function translateToEnglish(text) {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh|en`);
+            if (!res.ok) throw new Error('Translation failed');
+            const data = await res.json();
+            if (data.responseStatus !== 200) throw new Error('Translation failed');
+            return data.responseData.translatedText;
+        }
+
+        async function lookupWord() {
+            const input = document.getElementById('wordInput');
+            const word = input.value.trim();
+            if (!word) return;
+            const resEl = document.getElementById('dict-results');
+            resEl.style.display = 'block';
+
+            try {
+                let lookupTerm = word;
+                let translationNote = '';
+
+                // If Chinese, translate first
+                if (containsChinese(word)) {
+                    resEl.innerHTML = `Translating "${word}"...`;
+                    const translated = await translateToEnglish(word);
+                    lookupTerm = translated.toLowerCase().trim();
+                    translationNote = `<div style="margin-bottom: 15px; padding: 10px; background: #2a2a4a; border-radius: 6px; border-left: 3px solid var(--accent);">
+                        <span style="color: #888;">Chinese:</span> <strong>${word}</strong> → 
+                        <span style="color: #888;">English:</span> <strong style="color: var(--accent);">${lookupTerm}</strong>
+                    </div>`;
+                }
+
+                resEl.innerHTML = `Searching for "${lookupTerm}"...`;
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${lookupTerm}`);
+                if (!res.ok) throw new Error('Not found');
+                const data = await res.json();
+                renderDictionary(data[0], translationNote);
+            } catch (err) {
+                resEl.innerHTML = `Could not find definition for "${word}".`;
+            }
+        }
+
+        function renderDictionary(data, translationNote = '') {
+            const resEl = document.getElementById('dict-results');
+            let html = translationNote + `
+                <div class="dict-header">
+                    <div class="dict-word">${data.word}</div>
+                    <div class="dict-phonetic">${data.phonetic || ''}</div>
+                </div>
+            `;
+            data.meanings.forEach(m => {
+                html += `
+                    <div class="meaning-block">
+                        <span class="pos-tag">${m.partOfSpeech}</span>
+                        <ul class="def-list">
+                            ${m.definitions.slice(0, 3).map(d => {
+                    let defHtml = `<li>${d.definition}`;
+                    if (d.example) {
+                        const escapedExample = d.example.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        defHtml += `
+                                        <div style="margin-top: 8px; padding: 8px 12px; background: #333; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                            <span style="flex-grow: 1; color: #aaa; font-style: italic;">"${d.example}"</span>
+                                            <button onclick="addDictionarySentence('${escapedExample}', this)" 
+                                                style="padding: 4px 12px; font-size: 0.85em; background: var(--accent); border: none; border-radius: 4px; color: white; cursor: pointer; white-space: nowrap;">
+                                                + Add
+                                            </button>
+                                        </div>
+                                    `;
+                    }
+                    defHtml += `</li>`;
+                    return defHtml;
+                }).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            resEl.innerHTML = html;
+            // Scroll results into view
+            resEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function addDictionarySentence(text, btn) {
+            document.getElementById('newSentence').value = text;
+            addSentence();
+            const originalText = btn.textContent;
+            btn.textContent = "✅ Added";
+            btn.style.backgroundColor = "#444";
+            setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ""; }, 1000);
+        }
+        // Settings menu toggle
+        function toggleSettingsDropdown() {
+            const dropdown = document.getElementById('settings-dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('settings-menu');
+            const dropdown = document.getElementById('settings-dropdown');
+            if (menu && !menu.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Export data as JSON file
+        function exportData() {
+            toggleSettingsDropdown();
+            const dataStr = JSON.stringify(sentences, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `echocurve-${currentUser}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logStatus('📤 Data exported successfully!');
+        }
+
+        // Import data from JSON file
+        function importData() {
+            toggleSettingsDropdown();
+            document.getElementById('import-file-input').click();
+        }
+
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const importedData = JSON.parse(text);
+
+                if (!Array.isArray(importedData)) {
+                    throw new Error('Invalid data format');
+                }
+
+                const confirmed = await showDialog(`Import ${importedData.length} sentences? This will merge with your existing data.`);
+                if (!confirmed) return;
+
+                // Merge imported data with existing (avoid duplicates by text)
+                const existingTexts = new Set(sentences.map(s => s.text));
+                let addedCount = 0;
+                importedData.forEach((item, idx) => {
+                    if (!existingTexts.has(item.text)) {
+                        sentences.push({
+                            id: Date.now() + idx,
+                            text: item.text,
+                            nextReview: item.nextReview || Date.now(),
+                            interval: item.interval || 0,
+                            stage: item.stage || 0
+                        });
+                        addedCount++;
+                    }
+                });
+
+                await save();
+                logStatus(`📥 Imported ${addedCount} new sentences!`);
+            } catch (err) {
+                logStatus('❌ Import failed: Invalid file format');
+                console.error('Import error:', err);
+            }
+
+            // Reset file input
+            event.target.value = '';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                toggleSettingsDropdown();
+                currentUser = null;
+                currentToken = null;
+                localStorage.removeItem('echocurve_user');
+                localStorage.removeItem('echocurve_token');
+                sentences = [];
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('auth-username').value = '';
+                hideAuthStatus();
+                updateUserDatalist();
+                render();
+            }
+        }
+
+        function saveKnownUsername(username) {
+            let known = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            if (!known.includes(username)) {
+                known.push(username);
+                localStorage.setItem('echocurve_known_users', JSON.stringify(known));
+            }
+            updateUserDatalist();
+        }
+
+        function updateUserDatalist() {
+            const known = JSON.parse(localStorage.getItem('echocurve_known_users') || '[]');
+            const list = document.getElementById('user-list');
+            if (list) {
+                list.innerHTML = known.map(u => `<option value="${u}">`).join('');
+            }
+        }
+
+        function autoResize(textarea) {
+            // Reset to single line first
+            textarea.style.height = '';
+            // Only expand if content exceeds the natural height
+            if (textarea.scrollHeight > textarea.clientHeight) {
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+        }
+
+        function toggleClearBtn(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById('clear-' + inputId);
+            if (btn) {
+                btn.style.display = input.value.trim() ? 'flex' : 'none';
+            }
+        }
+
+        function clearInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                input.style.height = '';
+                input.focus();
+                toggleClearBtn(inputId);
+            }
+        }
+
+        function isAnyModalOpen() {
+            const modals = [
+                'auth-overlay', 'dialog-modal', 'review-modal',
+                'library-modal', 'public-library-modal', 'admin-import-modal',
+                'public-preview-modal'
+            ];
+            return modals.some(id => {
+                const el = document.getElementById(id);
+                return el && (el.style.display === 'flex' || el.style.display === 'block');
+            });
+        }
+
+        window.onload = () => {
+            updateUserDatalist();
+            updateUserRole();
+            loadData();
+
+            // Focus management - keep cursor on input boxes
+            const sentenceInput = document.getElementById('newSentence');
+            const wordInput = document.getElementById('wordInput');
+            const inputs = [sentenceInput, wordInput];
+
+            // Initial focus on sentence input after auth
+            setTimeout(() => {
+                if (document.getElementById('auth-overlay').style.display === 'none') {
+                    sentenceInput.focus();
+                }
+            }, 100);
+
+            // TAB cycles between the two inputs only
+            inputs.forEach((input, idx) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        inputs[(idx + 1) % inputs.length].focus();
+                    }
+                });
+
+                // Prevent focus from leaving inputs (unless modal is open)
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        const active = document.activeElement;
+                        // Only refocus if no modal is open and focus left the inputs
+                        if (!isAnyModalOpen()) {
+                            if (!inputs.includes(active)) {
+                                input.focus();
+                            }
+                        }
+                    }, 10);
+                });
+            });
+        };
+    </script>
+</body>
+
+</html>

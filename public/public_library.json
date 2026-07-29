@@ -1,0 +1,94 @@
+[
+  {
+    "id": 1769842180042,
+    "title": "Restaurant Reservation",
+    "sentences": [
+      {
+        "text": "Hello, I'm calling to book a table for tonight, please.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Certainly. For how many people?",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "A table for 4, at around 7:30 PM.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Let me check... Yes, we have a table available then. May I have your name?",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "It's under the name Smith.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Great. You table for 4 will be ready at 7:30.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Thank you very much. See you then.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "You're welcome. Have a nice day!",
+        "interval": 0.5,
+        "stage": 0
+      }
+    ]
+  },
+  {
+    "id": 1769842385423,
+    "title": "Restaurant Reservation (Fully Booked)",
+    "sentences": [
+      {
+        "text": "Hello, I'd like to reserve a table for two at 8:00 PM tonight.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "I'm so sorry, but we are completely full for the entire evening.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Oh, I see. What about earlier, perhaps around 5:30?",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "I'm afraid not. We have no tables available for any time today.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "That's a shame. Well, thank you anyway!",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "You're very welcome. I'm sorry we couldn't accommodate you today.",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "No problem at all. Have a good night!",
+        "interval": 0.5,
+        "stage": 0
+      },
+      {
+        "text": "Thank you, you too!",
+        "interval": 0.5,
+        "stage": 0
+      }
+    ]
+  }
+]
