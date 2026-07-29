@@ -283,6 +283,7 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="primary-grid" aria-label="Daily study workspace">
       <section className="review-band" aria-label="Review session">
         <div className="review-copy">
           <p className="section-kicker">Review queue</p>
@@ -338,7 +339,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="workspace-grid">
         <div className="panel composer">
           <p className="section-kicker">Capture</p>
           <h2>Add listening material</h2>

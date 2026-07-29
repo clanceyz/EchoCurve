@@ -11,6 +11,7 @@ test("EchoCurve page contains the core study workflow", async () => {
 
   assert.match(page, /EchoCurve/);
   assert.match(page, /Review queue/);
+  assert.match(page, /className="primary-grid"/);
   assert.match(page, /Starter dialogs/);
   assert.match(page, /localStorage/);
   assert.match(page, /speechSynthesis/);

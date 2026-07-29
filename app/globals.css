@@ -97,7 +97,7 @@ button.compact {
 .shell {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 32px 0 56px;
+  padding: 18px 0 56px;
 }
 
 .topbar {
@@ -105,7 +105,7 @@ button.compact {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 28px;
   align-items: end;
-  padding: 28px 0 30px;
+  padding: 14px 0 18px;
 }
 
 .eyebrow,
@@ -127,7 +127,7 @@ p {
 
 h1 {
   color: var(--panel-strong);
-  font-size: clamp(3.2rem, 8vw, 7.5rem);
+  font-size: clamp(2.6rem, 5vw, 4.8rem);
   line-height: 0.88;
   margin-bottom: 16px;
 }
@@ -147,7 +147,7 @@ h3 {
 
 .lede {
   color: #3b484b;
-  font-size: 1.12rem;
+  font-size: 0.98rem;
   max-width: 650px;
 }
 
@@ -178,8 +178,8 @@ h3 {
 
 .review-band {
   display: grid;
-  grid-template-columns: 0.72fr 1fr;
-  min-height: 310px;
+  grid-template-columns: 1fr;
+  min-height: 0;
   overflow: hidden;
   border-radius: 8px;
   background: var(--panel-strong);
@@ -187,13 +187,13 @@ h3 {
 }
 
 .review-copy {
-  padding: 34px;
+  padding: 24px;
   color: #d7e4e5;
 }
 
 .review-copy h2 {
   color: white;
-  font-size: clamp(2rem, 4vw, 4.4rem);
+  font-size: clamp(1.8rem, 3vw, 3.1rem);
   max-width: 410px;
 }
 
@@ -212,7 +212,7 @@ h3 {
       transparent 2px 32px
     ),
     #163f46;
-  padding: 34px;
+  padding: 24px;
 }
 
 .icon-button {
@@ -220,7 +220,7 @@ h3 {
 }
 
 .sentence {
-  min-height: 130px;
+  min-height: 96px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 8px;
   color: white;
@@ -250,9 +250,9 @@ h3 {
   gap: 10px;
 }
 
-.workspace-grid {
+.primary-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.74fr);
+  grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.88fr) minmax(0, 0.88fr);
   gap: 18px;
   margin: 18px 0;
 }
@@ -266,6 +266,7 @@ h3 {
 }
 
 .panel {
+  height: 100%;
   padding: 24px;
 }
 
@@ -287,7 +288,7 @@ input:focus {
 }
 
 textarea {
-  min-height: 126px;
+  min-height: 92px;
   resize: vertical;
 }
 
@@ -418,8 +419,7 @@ textarea {
 
 @media (max-width: 900px) {
   .topbar,
-  .review-band,
-  .workspace-grid,
+  .primary-grid,
   .dialog-grid {
     grid-template-columns: 1fr;
   }
@@ -431,6 +431,17 @@ textarea {
   .review-copy,
   .review-player {
     padding: 24px;
+  }
+}
+
+@media (min-width: 621px) and (max-width: 1100px) {
+  .primary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-band {
+    grid-column: 1 / -1;
+    grid-template-columns: 0.72fr 1fr;
   }
 }
 
