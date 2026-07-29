@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { phrasalVerbDialog } from "./phrasal-verb-examples";
 
 type Sentence = {
   id: string;
@@ -65,6 +66,7 @@ const starterDialogs: PublicDialog[] = [
       "Is breakfast included with the room?",
     ],
   },
+  phrasalVerbDialog,
 ];
 
 function makeSentence(text: string, dialogTitle?: string): Sentence {
