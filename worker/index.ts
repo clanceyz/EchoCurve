@@ -4,6 +4,7 @@ import handler from "vinext/server/app-router-entry";
 
 interface Env {
   ASSETS: Fetcher;
+  AUDIO: R2Bucket;
   DB: D1Database;
   OPENAI_API_KEY?: string;
   IMAGES: {
@@ -64,7 +65,16 @@ async function handleDataApi(request: Request, env: Env): Promise<Response> {
   return new Response("Method not allowed", { status: 405 });
 }
 
-async function handleTtsApi(request: Request, env: Env): Promise<Response> {
+const ttsCacheVersion = "gpt-4o-mini-tts:marin:learner-v1";
+
+async function ttsCacheKey(request: Request, text: string): Promise<string> {
+  const source = `${userId(request)}\n${ttsCacheVersion}\n${text}`;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+  const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `speech/${hash}.mp3`;
+}
+
+async function handleTtsApi(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!env.OPENAI_API_KEY) return Response.json({ error: "TTS is not configured" }, { status: 503 });
 
@@ -79,6 +89,18 @@ async function handleTtsApi(request: Request, env: Env): Promise<Response> {
 
   if (!text || text.length > 4096) {
     return Response.json({ error: "Text must contain 1 to 4096 characters" }, { status: 400 });
+  }
+
+  const cacheKey = await ttsCacheKey(request, text);
+  const cached = await env.AUDIO.get(cacheKey);
+  if (cached) {
+    return new Response(cached.body, {
+      headers: {
+        "content-type": "audio/mpeg",
+        "cache-control": "private, max-age=31536000, immutable",
+        "x-echocurve-tts-cache": "hit",
+      },
+    });
   }
 
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
@@ -103,10 +125,18 @@ async function handleTtsApi(request: Request, env: Env): Promise<Response> {
     return Response.json({ error: "Speech generation failed" }, { status: 502 });
   }
 
+  const audioForStorage = response.clone();
+  ctx.waitUntil(
+    env.AUDIO.put(cacheKey, audioForStorage.body, {
+      httpMetadata: { contentType: "audio/mpeg" },
+    }),
+  );
+
   return new Response(response.body, {
     headers: {
       "content-type": "audio/mpeg",
-      "cache-control": "no-store",
+      "cache-control": "private, max-age=31536000, immutable",
+      "x-echocurve-tts-cache": "miss",
     },
   });
 }
@@ -127,7 +157,7 @@ const worker = {
       return env.ASSETS.fetch(new Request(new URL("/public_library.json", request.url)));
     }
 
-    if (url.pathname === "/api/tts") return handleTtsApi(request, env);
+    if (url.pathname === "/api/tts") return handleTtsApi(request, env, ctx);
 
     if (url.pathname.startsWith("/api/auth/")) {
       return Response.json({ error: "Sites access provides authentication" }, { status: 410 });

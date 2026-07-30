@@ -8,6 +8,7 @@ test("Sites serves the restored EchoCurve interface", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   const legacy = await readFile(new URL("public/legacy.html", root), "utf8");
   const worker = await readFile(new URL("worker/index.ts", root), "utf8");
+  const hosting = JSON.parse(await readFile(new URL(".openai/hosting.json", root), "utf8"));
 
   assert.match(page, /src="\/legacy\.html"/);
   assert.match(legacy, /EchoCurve - SRS Practice/);
@@ -25,6 +26,9 @@ test("Sites serves the restored EchoCurve interface", async () => {
   assert.match(worker, /https:\/\/api\.openai\.com\/v1\/audio\/speech/);
   assert.match(worker, /model: "gpt-4o-mini-tts"/);
   assert.match(worker, /voice: "marin"/);
+  assert.match(worker, /env\.AUDIO\.get\(cacheKey\)/);
+  assert.match(worker, /env\.AUDIO\.put\(cacheKey/);
+  assert.equal(hosting.r2, "AUDIO");
 });
 
 test("the original local server remains available", async () => {
