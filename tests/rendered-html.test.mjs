@@ -19,13 +19,15 @@ test("Sites serves the restored EchoCurve interface", async () => {
   assert.match(legacy, /dialogTitle: item\.dialogTitle/);
   assert.match(legacy, /existing\.dialogTitle = item\.dialogTitle/);
   assert.match(legacy, /indexedDB\.open\(AUDIO_DB_NAME/);
+  assert.match(legacy, /AUDIO_CACHE_VERSION = 'openai:tts-1-hd:nova:v2'/);
+  assert.match(legacy, /audioCacheKey\(text\)/);
   assert.match(legacy, /await cacheAudio\(text, blob\)/);
   assert.match(legacy, /await loadNaturalSpeech\(text\)/);
   assert.match(worker, /CREATE TABLE IF NOT EXISTS user_data/);
   assert.match(worker, /oai-authenticated-user-email/);
   assert.match(worker, /https:\/\/api\.openai\.com\/v1\/audio\/speech/);
-  assert.match(worker, /model: "gpt-4o-mini-tts"/);
-  assert.match(worker, /voice: "marin"/);
+  assert.match(worker, /model: "tts-1-hd"/);
+  assert.match(worker, /voice: "nova"/);
   assert.match(worker, /env\.AUDIO\.get\(cacheKey\)/);
   assert.match(worker, /env\.AUDIO\.put\(cacheKey/);
   assert.equal(hosting.r2, "AUDIO");

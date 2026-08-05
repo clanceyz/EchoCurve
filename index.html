@@ -1684,6 +1684,7 @@
         // Natural speech is cached as MP3 blobs in IndexedDB for future playback.
         const AUDIO_DB_NAME = 'echocurve-audio';
         const AUDIO_STORE_NAME = 'speech';
+        const AUDIO_CACHE_VERSION = 'openai:tts-1-hd:nova:v2';
         const audioFetches = new Map();
         let audioDbPromise = null;
         let currentAudio = null;
@@ -1704,12 +1705,16 @@
             return audioDbPromise;
         }
 
+        function audioCacheKey(text) {
+            return `${AUDIO_CACHE_VERSION}:${text}`;
+        }
+
         async function getCachedAudio(text) {
             const db = await openAudioDb();
             return new Promise((resolve, reject) => {
                 const request = db.transaction(AUDIO_STORE_NAME, 'readonly')
                     .objectStore(AUDIO_STORE_NAME)
-                    .get(text);
+                    .get(audioCacheKey(text));
                 request.onsuccess = () => resolve(request.result || null);
                 request.onerror = () => reject(request.error);
             });
@@ -1719,7 +1724,7 @@
             const db = await openAudioDb();
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction(AUDIO_STORE_NAME, 'readwrite');
-                transaction.objectStore(AUDIO_STORE_NAME).put(blob, text);
+                transaction.objectStore(AUDIO_STORE_NAME).put(blob, audioCacheKey(text));
                 transaction.oncomplete = () => resolve();
                 transaction.onerror = () => reject(transaction.error);
             });
@@ -1729,7 +1734,7 @@
             try {
                 const db = await openAudioDb();
                 const transaction = db.transaction(AUDIO_STORE_NAME, 'readwrite');
-                transaction.objectStore(AUDIO_STORE_NAME).delete(text);
+                transaction.objectStore(AUDIO_STORE_NAME).delete(audioCacheKey(text));
             } catch (err) {
                 console.log('Could not remove cached speech:', err.message);
             }

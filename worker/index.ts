@@ -65,7 +65,7 @@ async function handleDataApi(request: Request, env: Env): Promise<Response> {
   return new Response("Method not allowed", { status: 405 });
 }
 
-const ttsCacheVersion = "gpt-4o-mini-tts:marin:learner-v1";
+const ttsCacheVersion = "tts-1-hd:nova:natural-v2";
 
 async function ttsCacheKey(request: Request, text: string): Promise<string> {
   const source = `${userId(request)}\n${ttsCacheVersion}\n${text}`;
@@ -110,13 +110,10 @@ async function handleTtsApi(request: Request, env: Env, ctx: ExecutionContext): 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini-tts",
-      voice: "marin",
+      model: "tts-1-hd",
+      voice: "nova",
       input: text,
-      instructions:
-        "Speak in warm, natural, conversational American English. Use clear pronunciation, gentle pacing, and natural intonation for a language learner.",
       response_format: "mp3",
-      speed: 0.95,
     }),
   });
 
